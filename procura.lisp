@@ -2,26 +2,25 @@
   (list board parent g h pieces)
 )
 
-(defun filter-nodes (node-list open-list close-list)
-  (cond ((null node-list) nil)
-        ((or (node-existsp (car node-list) open-list) (node-existsp (car node-list) close-list)) (filter-nodes (cdr node-list) open-list close-list))
-        (t (cons (car node-list) (filter-nodes (cdr node-list) open-list close-list)))))
+;; (defun filter-nodes (node-list open-list close-list)
+;;   (cond ((null node-list) nil)
+;;         ((or (node-existsp (car node-list) open-list) (node-existsp (car node-list) close-list)) (filter-nodes (cdr node-list) open-list close-list))
+;;         (t (cons (car node-list) (filter-nodes (cdr node-list) open-list close-list)))))
 
-(defun node-existsp (node list)
-  (if (member node list :test 'equal-node) t nil))
+;; (defun node-existsp (node list)
+;;   (if (member node list :test 'equal-node) t nil))
 
 (defun bfs (*abertos* &optional (*fechados* '()))
-(let ((open-size (length open)))
+(let ((open-size (length *abertos*)))
   (cond
     ((= open-size 0) nil)
     (T 
       (let* (
             (*noAtual* 
-              (car *abertos*))
+              (first *abertos*))
             (*sucessores*
-              (funcall 
-                (expand-node *noAtual*)
-                ))
+              (funcall expand-node *noAtual*)
+                )
       )
         (if (size-zero *sucessores*)
           (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
@@ -29,11 +28,10 @@
           (bfs  (concatenate 'list (cdr *abertos*) 
                               (remove-nil
                               (remove-duplicated-nodes
-                              *sucessores* (expand-node (car *abertos*)) *fechados*
+                              *sucessores* (expand-node (first *abertos*)) *fechados*
                               ))) 
                 (concatenate 'list *fechados* (list *noAtual*)))
           ))))))
-
 
 (defun size-zero (sucessores)
   (= (length sucessores) 0)
@@ -74,7 +72,7 @@
 	(second node)
 )
 
-(defun expand-node(node) 
+(defun expand-node (node) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
 	(apply #'list 
     (make-play 0 0 node) 

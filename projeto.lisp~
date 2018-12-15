@@ -1,8 +1,8 @@
 (defun load-files ()
   (progn
   (format t "A iniciar processo de carregamento de ficheiros...")
-  (compile-file "C:/Users/Perry/Documents/IA/Projecto/puzzle" :load t)
-  (compile-file "C:/Users/Perry/Documents/IA/Projecto/procura" :load t)
+  (compile-file "C:/Users/Perry/Dropbox/IA/DEV/puzzle" :load t)
+  (compile-file "C:/Users/Perry/Dropbox/IA/DEV/procura" :load t)
   (format t "Carregamento terminado com sucesso, a iniciar jogo...~%")
   )
 )
