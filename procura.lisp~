@@ -1,0 +1,43 @@
+(defun construct-node (board parent pieces &optional (g 0) (h 0))
+  (list board parent g h pieces)
+)
+
+
+
+;; (defun bfs(opened &optional (closed '()))
+;; "BREADTH-FIRST SEARCH"
+;;   (let ((opened-size (length opened)))
+;;    (cond
+;;     ((= opened-size 0) nil)
+;;     (T 
+;;      (let* ((chosen-node (first opened))  (expand-node chosen-node)
+;;       (if (= (length expanded-list) 0) 
+;;        (list (get-solution-path chosen-node) (length opened) (length closed))
+;;         ;;chama bfs, colocando os sucessores em opened e poe o primeiro elemento de opened em closed
+;;         (bfs (concatenate 'list (cdr opened) (remove-nil (remove-duplicated-nodes expanded-list opened closed))) (concatenate 'list closed (list chosen-node)))
+;;       )
+;;      )
+;;     )
+;;    )
+;;  )
+;; ))
+
+
+(defun get-node-parent (node)
+"Devolve o no pai de um no"
+	(second node)
+)
+
+(defun expand-node(node &optional (x 0) (y 0)) 
+"Expande um no, verificando as posicoes possiveis para cada peca"
+  (if (= x 2) 0 x)
+  (cond ((= 5 y) NIL) 
+	(T (apply #'list 
+    (make-play x y node) 
+    (expand-node node (+ 1 x) (+ 1 y))
+  ))
+))
+
+(defun ttg ()
+  (expand-node (test-board))
+)

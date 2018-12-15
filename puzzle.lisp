@@ -106,8 +106,3 @@
         ((listp (car list)) (append (car list) (single-list (cdr list))))
     )
 )
-
-(defun remove-nil(list)
-  "Remove todos os nils de ums lista. Retorna nova lista"
-   (apply #'append (mapcar #'(lambda(x) (if (null x) NIL (list x))) list))
-)
