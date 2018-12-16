@@ -44,16 +44,20 @@
 
 
 (defun bfs (*abertos* &optional (*fechados* '()))
-    (loop while (not (null *abertos*)) do
+    ;; (loop while (not (null *abertos*)) do
+  (let ((no-pieces-left (is-board-empty (get-current-node (first *abertos*))))
+   (cond
+    ((equal no-pieces-left T) nil)
+    (T 
       (let* (
             (*noAtual* 
               (first *abertos*))
             (*sucessores*
-              (remove-duplicates (expand-node *noAtual*) :test 'equal) 
-              )
+              (expand-node (get-current-node *noAtual*)
+              ))
       )
-        (if (is-board-empty *noAtual*)
-          (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
+        (if (is-board-empty (get-current-node *noAtual*))
+          (list (get-current-node *noAtual*) (get-solution-path *fechados*) (length *abertos*) (length *fechados*))
           ;; abertos + sucessores filtrados
           (bfs  (concatenate 
                     'list
@@ -66,9 +70,12 @@
                   'list 
                   *fechados*
                   (list *noAtual*)))
-          )))););)))
+          )))))));)
 ;; (mapcar #'(lambda (expanded-node) (cond ((funcall solution expanded-node) (stop-performance expanded-node)(return expanded-node))))expanded-nodes))))
 
+(defun get-current-node (node)
+  (first node)
+)
 
 (defun size-zero (sucessores)
   (= (length sucessores) 0)
@@ -77,8 +84,8 @@
 (defun get-solution-path (node)
 "Retorna uma lista de estados do root ao goal"
   (cond 
-   ((null (get-node-parent node)) (list (first node)))
-   (T (append (get-solution-path (get-node-parent node)) (list (first node))))
+   ((null (get-node-parent node)) (list (first (get-current-node node))))
+   (T (append (get-solution-path (rest node)) (list (first (get-current-node node)))))
    )
 )
 
@@ -112,22 +119,28 @@
 (defun expand-node (node) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
   (if (is-board-empty node) nil)
-	(list
-    (make-play 0 0 node) 
-    (make-play 0 1 node) 
-    (make-play 0 2 node) 
-    (make-play 0 3 node) 
-    (make-play 0 4 node) 
-    (make-play 0 5 node) 
-    (make-play 1 0 node) 
-    (make-play 1 1 node) 
-    (make-play 1 2 node) 
-    (make-play 1 3 node) 
-    (make-play 1 4 node) 
-    (make-play 1 5 node)
-  )
+	(remove-duplicates (list
+    (attach-parent 0 0 node)
+    (attach-parent 0 1 node) 
+    (attach-parent 0 2 node) 
+    (attach-parent 0 3 node) 
+    (attach-parent 0 4 node) 
+    (attach-parent 0 5 node) 
+    (attach-parent 1 0 node) 
+    (attach-parent 1 1 node) 
+    (attach-parent 1 2 node) 
+    (attach-parent 1 3 node) 
+    (attach-parent 1 4 node) 
+    (attach-parent 1 5 node)
+  ) :test 'equal) 
 )
 
+(defun attach-parent (x y node)
+  (construct-node (make-play x y node) node (count-board-pieces node))
+)
+
+;;(defun construct-node (board parent pieces &optional (g 0) (h 0))
+ 
 (defun ttg ()
   (node-print (bfs (list test-board))
 ))

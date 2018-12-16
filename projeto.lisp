@@ -36,7 +36,7 @@
           (let* 
             ((board-node (get-file-board))
              (board board-node)
-             (node (construct-node board nil (count-board-pieces board)))
+             (node (list (construct-node board nil (count-board-pieces board))))
             )
               (ecase opt
                 (1
