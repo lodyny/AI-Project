@@ -3,35 +3,72 @@
 )
 
 ;; (defun filter-nodes (node-list open-list close-list)
-;;   (cond ((null node-list) nil)
-;;         ((or (node-existsp (car node-list) open-list) (node-existsp (car node-list) close-list)) (filter-nodes (cdr node-list) open-list close-list))
-;;         (t (cons (car node-list) (filter-nodes (cdr node-list) open-list close-list)))))
 
-;; (defun node-existsp (node list)
-;;   (if (member node list :test 'equal-node) t nil))
+(defun filter-nodes (node-list open-list close-list)
+  (cond ((null node-list) nil)
+        ((or  (member (car node-list) open-list :test 'equal)  
+              (member (car node-list) close-list :test 'equal)) 
+                  (filter-nodes (cdr node-list) open-list close-list))
+        (t (cons (car node-list) (filter-nodes (cdr node-list) open-list close-list)))))
+
+(defun node-existsp (node list)
+  (if (member node list :test 'equal-node) t nil))
+
+(defun equal-node (node1 node2)
+  (equal (node-state node1) node2))
+
+(defun node-state (node)
+  (car node))
+
+(defun node-board (node-state)
+  (car node-state))
+
+(defun node-original (node)
+  "Gets the node original root"
+    (cond ((null (node-parent node)) node)
+(t (node-original (node-parent node)))))
+
+(defun node-pieces (node-state)
+(second node-state))
+
+(defun node-print (node)
+  "Prints node board, pieces remaining, price, h falue and f value"
+  (cond ((null node) nil)
+        (t (format t "Original:~%")
+           (board-print (node-board (node-state (node-original node)))) 
+           (format t "Final:~%")
+           (board-print (node-board (node-state node))) 
+          ;;  (format t "~%Pieces: ~d~%Depth:~d~%Cost:~d~%F=~d~%H=~d~%" (node-pieces (node-state node)) (node-depth node) (node-cost node) (node-f node) (node-h node))
+           )))
+
+
 
 (defun bfs (*abertos* &optional (*fechados* '()))
-(let ((open-size (length *abertos*)))
-  (cond
-    ((= open-size 0) nil)
-    (T 
+    (loop while (not (null *abertos*)) do
       (let* (
             (*noAtual* 
               (first *abertos*))
             (*sucessores*
-              (funcall expand-node *noAtual*)
-                )
+              (remove-duplicates (expand-node *noAtual*) :test 'equal) 
+              )
       )
-        (if (size-zero *sucessores*)
+        (if (is-board-empty *noAtual*)
           (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
           ;; abertos + sucessores filtrados
-          (bfs  (concatenate 'list (cdr *abertos*) 
-                              (remove-nil
-                              (remove-duplicated-nodes
-                              *sucessores* (expand-node (first *abertos*)) *fechados*
-                              ))) 
-                (concatenate 'list *fechados* (list *noAtual*)))
-          ))))))
+          (bfs  (concatenate 
+                    'list
+                    (filter-nodes
+                      *sucessores*
+                      *abertos* *fechados*)
+                      (cdr *abertos*)
+                )
+                (concatenate 
+                  'list 
+                  *fechados*
+                  (list *noAtual*)))
+          )))););)))
+;; (mapcar #'(lambda (expanded-node) (cond ((funcall solution expanded-node) (stop-performance expanded-node)(return expanded-node))))expanded-nodes))))
+
 
 (defun size-zero (sucessores)
   (= (length sucessores) 0)
@@ -74,7 +111,8 @@
 
 (defun expand-node (node) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
-	(apply #'list 
+  (if (is-board-empty node) nil)
+	(list
     (make-play 0 0 node) 
     (make-play 0 1 node) 
     (make-play 0 2 node) 
@@ -86,10 +124,10 @@
     (make-play 1 2 node) 
     (make-play 1 3 node) 
     (make-play 1 4 node) 
-    (make-play 1 5 node)() 
+    (make-play 1 5 node)
   )
 )
 
 (defun ttg ()
-  (expand-node (test-board))
-)
+  (node-print (bfs (list test-board))
+))
