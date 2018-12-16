@@ -29,7 +29,7 @@
             )
       )
         (if (equal (is-board-empty (first *noAtual*)) T)
-          (list (get-solution-path *noAtual*) (get-current-node *noAtual*) (length *abertos*) (length *fechados*))
+          (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
           ;; abertos + sucessores filtrados
           (bfs  (concatenate 
                     'list
@@ -107,8 +107,8 @@
 (defun get-solution-path (node)
 "Retorna uma lista de estados do root ao goal"
   (cond 
-   ((null (get-node-parent node)) '())
-   (T (list (get-current-node node) (get-solution-path (rest node))))
+   ((null (rest node)) '())
+   (T (append (get-solution-path (second node)) (list (car node))))
    )
 )
 
