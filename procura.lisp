@@ -85,7 +85,7 @@
 (defun get-solution-path (node)
 "Retorna uma lista de estados do root ao goal"
   (cond 
-   ((null (get-node-parent node)) (list (first (get-current-node node))))
+   ((null (get-node-parent node)) '())
    (T (append (get-solution-path (rest node)) (list (first (get-current-node node)))))
    )
 )
