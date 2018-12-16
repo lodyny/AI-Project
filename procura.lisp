@@ -41,13 +41,14 @@
           ;;  (format t "~%Pieces: ~d~%Depth:~d~%Cost:~d~%F=~d~%H=~d~%" (node-pieces (node-state node)) (node-depth node) (node-cost node) (node-f node) (node-h node))
            )))
 
-
-
 (defun bfs (*abertos* &optional (*fechados* '()))
     ;; (loop while (not (null *abertos*)) do
-  (let ((no-pieces-left (is-board-empty (get-current-node (first *abertos*))))
+  (let 
+      ((expand-size
+        (length *abertos*)
+      ))
    (cond
-    ((equal no-pieces-left T) nil)
+    ((= expand-size 0) nil)
     (T 
       (let* (
             (*noAtual* 
@@ -56,7 +57,7 @@
               (expand-node (get-current-node *noAtual*)
               ))
       )
-        (if (is-board-empty (get-current-node *noAtual*))
+        (if (equal (is-board-empty (get-current-node *noAtual*)) T)
           (list (get-current-node *noAtual*) (get-solution-path *fechados*) (length *abertos*) (length *fechados*))
           ;; abertos + sucessores filtrados
           (bfs  (concatenate 
@@ -70,7 +71,7 @@
                   'list 
                   *fechados*
                   (list *noAtual*)))
-          )))))));)
+          )))))););)
 ;; (mapcar #'(lambda (expanded-node) (cond ((funcall solution expanded-node) (stop-performance expanded-node)(return expanded-node))))expanded-nodes))))
 
 (defun get-current-node (node)
