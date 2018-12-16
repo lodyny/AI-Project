@@ -49,7 +49,7 @@
                 )
                 (2
                    (let* ((depth (read-depth))
-                                    (solution (list (current-time) (dfs depth node) (current-time) nboard 'DFS depth)))
+                                    (solution (list (current-time) (dfs depth node) (current-time) board-node 'DFS depth)))
                                (progn (write-statistics-file solution) solution)   
                              )
                  )
