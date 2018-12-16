@@ -13,6 +13,11 @@
   )
 )
 
+(defun print-board (board &optional (stream t))
+  "Mostra um tabuleiro bem formatado"
+   (not (null (mapcar #'(lambda(l) (format stream "~%~t~t ~a" l)) board)))
+)
+
 (defun value-of (line column board)
     (nth column (nth line board))
 )
