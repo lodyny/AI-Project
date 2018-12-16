@@ -44,6 +44,11 @@
                     solution
                   )
                 )
+                (2
+                  (let ((solution (dfs node 300)))
+                    solution
+                  )
+                )
               )
           )
         )
