@@ -1,11 +1,100 @@
+;; Code about the searching algorithms
+;; Developed by Cesar Nero and David Afonso
+;; Artificial Intelligence - IPS 2018/2019
+
+
+;; Searching Algorithms
+(defun bfs (open &optional (closed '()))
+"Breath-First Search"
+  (let 
+      ((expand-size
+        (length open)
+      ))
+   (cond
+    ((= expand-size 0) nil)
+    (T 
+      (let* (
+            (current-node 
+              (first open))
+            (expanded-list
+              (expand-node current-node)
+            )
+      )
+        (if (equal (is-board-empty (first current-node)) T)
+          (list (get-solution-path current-node) (length open) (length closed))
+          ;; abertos + sucessores filtrados
+          (bfs  (concatenate 
+                    'list
+                    (cdr open)
+                    (remove-nil (remove-duplicated-nodes 
+                      expanded-list
+                      open closed))
+                )
+                (concatenate 
+                  'list 
+                  closed
+                  (list current-node)
+                )
+          )
+          ))))))
+
+(defun dfs (open max-depth &optional (closed '()))
+   (cond
+    ((= (length open) 0) nil)
+    ((> (length (get-solution-path (first open))) max-depth) (dfs (rest open) max-depth (concatenate 
+                                                                      'list 
+                                                                      closed
+                                                                      (car open)
+                                                                    )))
+    (T 
+      (let* (
+            (current-node 
+              (first open))
+            (expanded-list
+              (expand-node current-node)
+            )
+      )
+        (if (equal (is-board-empty (get-current-node current-node)) T)
+          (list (get-solution-path current-node) (length open) (- (length (get-solution-path (first open))) 1 ))
+          (dfs  (concatenate 
+                    'list
+                    expanded-list
+                    (cdr open)
+                )
+                max-depth
+                (concatenate 
+                  'list 
+                  closed
+                  (list current-node)
+                )
+          )
+          )))))
+
+
+  (defun A* (open heuristic &optional (closed '()) (captured-pieces 0))
+
+  (cond
+    ((= (length open) 0) nil)
+    (T 
+      (let* (
+            (current-node 
+              (first open))
+            (expanded-list
+              (expand-node-a current-node ())
+            )
+      )
+))))
+
+;; Node Stuff
+;; Node ::= (<state> <parent> <g> <h> <pieces-left>)
 (defun construct-node (board parent pieces &optional (g 0) (h 0))
+"Build a node"
   (list board parent g h pieces)
 )
 
 
-
-
 (defun remove-duplicated-nodes(list open closed)
+"Remove from the list "
 "Recebe uma lista de nos, seguido de uma lista de nos abertos e fechados, retirando da primeira lista os nos ja existentes nas outras"
   (remove-duplicate-values (remove-duplicate-values list open) closed)                
 )
@@ -19,128 +108,10 @@
 )
 
 (defun remove-nil(list)
-  "Remove todos os nils de ums lista. Retorna nova lista"
+"Remove all nils from the received list"
    (apply #'append (mapcar #'(lambda(x) (if (null x) NIL (list x))) list))
 )
 
-(defun bsf (*abertos* &optional (*fechados* '()))
-  (let 
-      ((expand-size
-        (length *abertos*)
-      ))
-   (cond
-    ((= expand-size 0) nil)
-    (T 
-      (let* (
-            (*noAtual* 
-              (first *abertos*))
-            (*sucessores*
-              (expand-node *noAtual*)
-            )
-      )
-        (if (equal (is-board-empty (first *noAtual*)) T)
-          (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
-          ;; abertos + sucessores filtrados
-          (bsf  (concatenate 
-                    'list
-                    (cdr *abertos*)
-                    (remove-nil (remove-duplicated-nodes 
-                      *sucessores*
-                      *abertos* *fechados*))
-                )
-                (concatenate 
-                  'list 
-                  *fechados*
-                  (list *noAtual*)
-                )
-          )
-          ))))))
-
-(defun dsf (*abertos* *max-depth* &optional (*fechados* '()))
-   (cond
-    ((= (length *abertos*) 0) nil)
-    ((> (length (get-solution-path (first *abertos*))) *max-depth*) (dsf (rest *abertos*) *max-depth* (concatenate 
-                                                                      'list 
-                                                                      *fechados*
-                                                                      (car *abertos*)
-                                                                    )))
-    (T 
-      (let* (
-            (*noAtual* 
-              (first *abertos*))
-            (*sucessores*
-              (expand-node *noAtual*)
-            )
-      )
-        (if (equal (is-board-empty (get-current-node *noAtual*)) T)
-          (list (get-solution-path *noAtual*) (length *abertos*) (- (length (get-solution-path (first *abertos*))) 1 ))
-          (dsf  (concatenate 
-                    'list
-                    *sucessores*
-                    (cdr *abertos*)
-                )
-                *max-depth*
-                (concatenate 
-                  'list 
-                  *fechados*
-                  (list *noAtual*)
-                )
-          )
-          )))))
-
-
-  (defun A* (*abertos* heuristic &optional (*fechados* '()) (*captured-pieces* 0))
-
-  (cond
-    ((= (length *abertos*) 0) nil)
-    (T 
-      (let* (
-            (*noAtual* 
-              (first *abertos*))
-            (*sucessores*
-              (expand-node-a *noAtual* ())
-            )
-      )
-))))
-
-;; 1    Create a search graph G, consisting solely of the start node, No. Put No on a list called OPEN.
-;; 2    Create a list called CLOSED that is initially empty.
-;; 3    If OPEN is empty, exit with failure.
-;; 4    Select the first node on OPEN, remove it from OPEN, and put it on CLOSED. Called this node n.
-;; 5    If n is a goal node, exit successfully with the solution obtained by tracing a path along the pointers from n to no in G. (The pointers define a search tree and are established in Step 7.)
-;; 6    Expand node n, generating the set M, of its successors that are not already ancestors of n in G. Install these members of M as successors of n in G.
-;; 7    Establish a pointer to n from each of those members of M that were not already in G (i.e., not already on either OPEN or CLOSED). Add these members of M to OPEN. For each member, m, of M that was already on OPEN or CLOSED, redirect its pointer to n if the best path to m found so far is through n. For each member of M already on CLOSED, redirect the pointers of each of its descendants in G so that they point backward along the best paths found so far to these descendants.
-;; 8    Reorder the list OPEN in order of increasting f values. (Ties among minimal f values are resolved in favor of the deepest node in the search tree.)
-;; 9    Go to Step 3.
-
-
-  ;;  (cond
-  ;;   ((= (length *abertos*) 0) nil)
-  ;;   (T 
-  ;;     (let* (
-  ;;           (*noAtual* 
-  ;;             (first *abertos*))
-  ;;           (*sucessores*
-  ;;             (expand-node *noAtual*)
-  ;;           )
-      ;; )
-        ;; (if (equal (is-board-empty (get-current-node *noAtual*)) T)
-        ;;   (list (get-solution-path *noAtual*) (length *abertos*) (- (length (get-solution-path (first *abertos*))) 1 ))
-        ;;   (dsf  (concatenate 
-        ;;             'list
-        ;;             *sucessores*
-        ;;             (cdr *abertos*)
-        ;;         )
-        ;;         *max-depth*
-        ;;         (concatenate 
-        ;;           'list 
-        ;;           *fechados*
-        ;;           (list *noAtual*)
-        ;;         )
-        ;;   )
-        ;;   )
-          ;)))
-          ;)
 
 (defun get-lowest-f(node)
 "Retorna o no de uma lista com o valor f mais baixo"
@@ -255,8 +226,52 @@
     (construct-node (make-play line column (first node)) node (count-board-pieces (first node)))
   )
 )
-;;(defun construct-node (board parent pieces &optional (g 0) (h 0))
  
 (defun ttg ()
   (node-print (bfs (list test-board))
 ))
+
+
+(defun penetrance (list)
+"Penetrancia"
+  (/ (solution-length list) (number-generated-nodes list))
+)
+
+(defun solution-node(list)
+"Nó solução"
+  (nth (1- (length (car list))) (car list))
+)
+
+(defun solution-length (list)
+"Devolve o comprimento de uma  solucao"
+ (length (car list))
+)
+
+(defun number-expanded-nodes-bfsdfs (list)
+"Número de nós expandidos bfs and dfs"
+  (third list)
+)
+
+(defun branching-factor (list &optional (valor-L (solution-length list)) (valor-T (number-generated-nodes list)) (erro 0.1) (bmin 1) (bmax 10e11))
+"Devolve o factor de ramificacao, executando o metodo da bisseccao"
+  (let ((bmedio (/ (+ bmin bmax) 2)))
+    (cond 
+     ((< (- bmax bmin) erro) (/ (+ bmax bmin) 2))
+     ((< (f-polinomial bmedio valor-L valor-T) 0) (branching-factor list valor-L valor-T erro bmedio bmax))
+     (t (branching-factor list valor-L valor-T erro bmin bmedio))
+     )
+    )
+)
+
+(defun number-generated-nodes (list)
+"Retorna Número de nós gerados"
+  (+ (second list) (third list))
+)
+
+(defun f-polinomial (B L valor-T)
+ "B + B^2 + ... + B^L=T"
+  (cond
+   ((= 1 L) (- B valor-T))
+   (T (+ (expt B L) (f-polinomial B (- L 1) valor-T)))
+  )
+)
