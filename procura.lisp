@@ -89,26 +89,31 @@
           )))))
 
 
-;;   (defun A* (*abertos* heuristic &optional (*fechados* '()) (*captured-pieces* 0))
+  (defun A* (*abertos* heuristic &optional (*fechados* '()) (*captured-pieces* 0))
 
-;;   (let ((*pecas-iniciais* (count-board-pieces (first node)) )))
-;;   (setq *open* (list *abertos*))
-;;   (setq *close* nil)
-;;   (loop while (not (null *open*)) do
-;;         (let* ((*noAtual* (car *open*)) 
-;;                (*unfiltered-nodes* (expand-node *noAtual* heuristic)
-;;                (expanded-nodes (filter-nodes *unfiltered-nodes* *open* *close*)))            
-;;           (add-explored 1)
-;;           (add-generate (length expanded-nodes))
-;;           (setq *close* (append *close* (list current-node)))
-;;           (cond ((funcall solution current-node) (stop-performance current-node)(return current-node)))
-;;           ;(setq *open* (append (cdr *open*) expanded-nodes))       
-;;           (setq *open* (ordered-insert-list (cdr *open*) expanded-nodes))
-;;           (setq *open* (filter-nodes-update-open *unfiltered-nodes* *open*))
-;;           ;Failsafe
-;;           ;(setq *open* (qsort *open* #'< cost))
-;;           (stable-sort *open* #'< :key cost)
-;; )))
+  (cond
+    ((= (length *abertos*) 0) nil)
+    (T 
+      (let* (
+            (*noAtual* 
+              (first *abertos*))
+            (*sucessores*
+              (expand-node-a *noAtual* ())
+            )
+      )
+))))
+
+;; 1    Create a search graph G, consisting solely of the start node, No. Put No on a list called OPEN.
+;; 2    Create a list called CLOSED that is initially empty.
+;; 3    If OPEN is empty, exit with failure.
+;; 4    Select the first node on OPEN, remove it from OPEN, and put it on CLOSED. Called this node n.
+;; 5    If n is a goal node, exit successfully with the solution obtained by tracing a path along the pointers from n to no in G. (The pointers define a search tree and are established in Step 7.)
+;; 6    Expand node n, generating the set M, of its successors that are not already ancestors of n in G. Install these members of M as successors of n in G.
+;; 7    Establish a pointer to n from each of those members of M that were not already in G (i.e., not already on either OPEN or CLOSED). Add these members of M to OPEN. For each member, m, of M that was already on OPEN or CLOSED, redirect its pointer to n if the best path to m found so far is through n. For each member of M already on CLOSED, redirect the pointers of each of its descendants in G so that they point backward along the best paths found so far to these descendants.
+;; 8    Reorder the list OPEN in order of increasting f values. (Ties among minimal f values are resolved in favor of the deepest node in the search tree.)
+;; 9    Go to Step 3.
+
+
   ;;  (cond
   ;;   ((= (length *abertos*) 0) nil)
   ;;   (T 
@@ -193,36 +198,36 @@
     (- (- (* 14 14) occupied-spaces) occupied-spaces))
 )
 
-(defun expand-node-a (node attach-method &optional (heuristic 'base-heuristic)) 
+(defun expand-node-a (node pieces &optional (heuristic 'base-heuristic)) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
   (if (is-board-empty (first node)) nil)
     (remove nil 
       (list
-        (attach-parent-a 0 0 node heuristic)
-        (attach-parent-a 0 1 node heuristic) 
-        (attach-parent-a 0 2 node heuristic) 
-        (attach-parent-a 0 3 node heuristic) 
-        (attach-parent-a 0 4 node heuristic) 
-        (attach-parent-a 0 5 node heuristic) 
-        (attach-parent-a 1 0 node heuristic) 
-        (attach-parent-a 1 1 node heuristic) 
-        (attach-parent-a 1 2 node heuristic) 
-        (attach-parent-a 1 3 node heuristic) 
-        (attach-parent-a 1 4 node heuristic) 
-        (attach-parent-a 1 5 node heuristic)
+        (attach-parent-a 0 0 node pieces heuristic)
+        (attach-parent-a 0 1 node pieces heuristic) 
+        (attach-parent-a 0 2 node pieces heuristic) 
+        (attach-parent-a 0 3 node pieces heuristic) 
+        (attach-parent-a 0 4 node pieces heuristic) 
+        (attach-parent-a 0 5 node pieces heuristic) 
+        (attach-parent-a 1 0 node pieces heuristic) 
+        (attach-parent-a 1 1 node pieces heuristic) 
+        (attach-parent-a 1 2 node pieces heuristic) 
+        (attach-parent-a 1 3 node pieces heuristic) 
+        (attach-parent-a 1 4 node pieces heuristic) 
+        (attach-parent-a 1 5 node pieces heuristic)
   ) ) 
 )
 
-(defun attach-parent-a (line column node heuristic)
+(defun attach-parent-a (line column node pieces heuristic)
   (if (equal (member (first node) (list (make-play line column (first node))) :test 'equal) nil)
-     (board parent heuristic (count-board-pieces (first node))) 
+     (create-node-from-state board parent heuristic (count-board-pieces (first node)) pieces) 
     ;; (create-node-from-state (make-play line column (first node)) node (count-board-pieces (first node)))
   ))
 
   
-(defun create-node-from-state (board parent heuristic o) 
+(defun create-node-from-state (board parent heuristic o pieces) 
   (let ((g (1+ (caddr parent))))
-    (construct-node board parent g (- o ) ))
+    (construct-node board parent g (- o (- pieces o)) ))
 )
 
 (defun expand-node (node) 
