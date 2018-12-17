@@ -29,7 +29,7 @@
             )
       )
         (if (equal (is-board-empty (first *noAtual*)) T)
-          (list (get-solution-path *noAtual*) (get-current-node *noAtual*) (length *abertos*) (length *fechados*))
+          (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
           ;; abertos + sucessores filtrados
           (bfs  (concatenate 
                     'list
@@ -46,8 +46,7 @@
           )
           ))))))
 
-
-(defun dfs (*abertos* *max-depth* &optional (*fechados* '()))
+(defun dsf (*abertos* *max-depth* &optional (*fechados* '()))
     ;; (loop while (not (null *abertos*)) do
   (let 
       ( (expand-size
@@ -69,20 +68,19 @@
             (*noAtual* 
               (first *abertos*))
             (*sucessores*
-              (expand-node *noAtual*
-              ))
+              (expand-node *noAtual*)
+            )
       )
         (if (equal (is-board-empty (get-current-node *noAtual*)) T)
-          (list (get-solution-path *noAtual*) (get-current-node *noAtual*) (length *abertos*) (length *fechados*))
+          (list (get-solution-path *noAtual*) (length *abertos*) (length *fechados*))
           ;; abertos + sucessores filtrados
-          (dfs  (concatenate 
+          (bfs  (concatenate 
                     'list
                     (filter-nodes
                       *sucessores*
                       *abertos* *fechados*)
-                      (cdr *abertos*)
+                    (cdr *abertos*)
                 )
-                *max-depth*
                 (concatenate 
                   'list 
                   *fechados*
@@ -107,8 +105,8 @@
 (defun get-solution-path (node)
 "Retorna uma lista de estados do root ao goal"
   (cond 
-   ((null (car node)) '())
-   (T (append (car (get-current-node node)) (get-solution-path (rest node))))
+   ((null (rest node)) '())
+   (T (append (get-solution-path (second node)) (list (car node))))
    )
 )
 
@@ -120,19 +118,20 @@
 (defun expand-node (node) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
   (if (is-board-empty (first node)) nil)
- (remove nil (list
-    (attach-parent 0 0 node)
-    (attach-parent 0 1 node) 
-    (attach-parent 0 2 node) 
-    (attach-parent 0 3 node) 
-    (attach-parent 0 4 node) 
-    (attach-parent 0 5 node) 
-    (attach-parent 1 0 node) 
-    (attach-parent 1 1 node) 
-    (attach-parent 1 2 node) 
-    (attach-parent 1 3 node) 
-    (attach-parent 1 4 node) 
-    (attach-parent 1 5 node)
+    (remove nil 
+      (list
+        (attach-parent 0 0 node)
+        (attach-parent 0 1 node) 
+        (attach-parent 0 2 node) 
+        (attach-parent 0 3 node) 
+        (attach-parent 0 4 node) 
+        (attach-parent 0 5 node) 
+        (attach-parent 1 0 node) 
+        (attach-parent 1 1 node) 
+        (attach-parent 1 2 node) 
+        (attach-parent 1 3 node) 
+        (attach-parent 1 4 node) 
+        (attach-parent 1 5 node)
   ) ) 
 )
 

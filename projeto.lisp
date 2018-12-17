@@ -1,8 +1,8 @@
 (defun load-files ()
   (progn
   (format t "A iniciar processo de carregamento de ficheiros...")
-  (compile-file "C:/Users/cesarnero/Documents/GitHub/Projecto-IA/puzzle" :load t)
-  (compile-file "C:/Users/cesarnero/Documents/GitHub/Projecto-IA/procura" :load t)
+  (compile-file "C:/Users/Perry/Documents/IA/Projecto/puzzle" :load t)
+  (compile-file "C:/Users/Perry/Documents/IA/Projecto/procura" :load t)
   (format t "Carregamento terminado com sucesso, a iniciar jogo...~%")
   )
 )
@@ -44,13 +44,14 @@
             )
               (ecase opt
                 (1
-                   (let ((solution (list (current-time) (bfs node) (current-time) board-node 'BFS)))
-                   (progn (write-to-file solution) solution))          
+                   (let ((solution (list (current-time) (bsf node) (current-time) board-node 'BFS)))
+                   solution
+                   )          
                 )
                 (2
                    (let* ((depth (read-depth))
-                                    (solution (list (current-time) (dfs depth node) (current-time) board-node 'DFS depth)))
-                               (progn (write-statistics-file solution) solution)   
+                                    (solution (list (current-time) (dsf node depth) (current-time) board-node 'DFS depth)))
+                            solution
                              )
                  )
               )
