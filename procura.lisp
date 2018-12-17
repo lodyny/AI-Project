@@ -5,8 +5,8 @@
 
 (defun create-node-from-state (board parent heuristic) 
   (let ((g (1+ (caddr parent))) 
-        (o-c (funcall heuristic board)))
-    (construct-node board parent (1+ (caddr parent)) g o-c (+ g o-c))))
+        (h (funcall heuristic board)))
+    (construct-node board parent g h)))
 
 
 (defun remove-duplicated-nodes(list open closed)
@@ -99,7 +99,7 @@
   (setq *close* nil)
   (loop while (not (null *open*)) do
         (let* ((*noAtual* (car *open*)) 
-               (*unfiltered-nodes* (expand-node *noAtual* )
+               (*unfiltered-nodes* (expand-node *noAtual* heuristic)
                (expanded-nodes (filter-nodes *unfiltered-nodes* *open* *close*)))            
           (add-explored 1)
           (add-generate (length expanded-nodes))
@@ -196,7 +196,7 @@
     (- (- (* 14 14) occupied-spaces) occupied-spaces))
 )
 
-(defun expand-node (node &optional (attach-method 'attach-parent)) 
+(defun expand-node-a (node attach-method &optional (heuristic 'base-heuristic)) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
   (if (is-board-empty (first node)) nil)
     (remove nil 
@@ -213,6 +213,31 @@
         (funcall attach-method 1 3 node) 
         (funcall attach-method 1 4 node) 
         (funcall attach-method 1 5 node)
+  ) ) 
+)
+
+(defun attach-parent-a (line column node)
+  (if (equal (member (first node) (list (make-play line column (first node))) :test 'equal) nil)
+    (construct-node (make-play line column (first node)) node (count-board-pieces (first node)))
+  )
+
+(defun expand-node (node) 
+"Expande um no, verificando as posicoes possiveis para cada peca"
+  (if (is-board-empty (first node)) nil)
+    (remove nil 
+      (list
+        (attach-parent 0 0 node)
+        (attach-parent 0 1 node) 
+        (attach-parent 0 2 node) 
+        (attach-parent 0 3 node) 
+        (attach-parent 0 4 node) 
+        (attach-parent 0 5 node) 
+        (attach-parent 1 0 node) 
+        (attach-parent 1 1 node) 
+        (attach-parent 1 2 node) 
+        (attach-parent 1 3 node) 
+        (attach-parent 1 4 node) 
+        (attach-parent 1 5 node)
   ) ) 
 )
 
