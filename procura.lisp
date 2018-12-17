@@ -3,10 +3,6 @@
 )
 
 
-(defun create-node-from-state (board parent heuristic) 
-  (let ((g (1+ (caddr parent))) 
-        (h (funcall heuristic board)))
-    (construct-node board parent g h)))
 
 
 (defun remove-duplicated-nodes(list open closed)
@@ -93,25 +89,26 @@
           )))))
 
 
-  (defun A* (*abertos* heuristic &optional (*fechados* '()) (*captured-pieces* 0))
+;;   (defun A* (*abertos* heuristic &optional (*fechados* '()) (*captured-pieces* 0))
 
-  (setq *open* (list *abertos*))
-  (setq *close* nil)
-  (loop while (not (null *open*)) do
-        (let* ((*noAtual* (car *open*)) 
-               (*unfiltered-nodes* (expand-node *noAtual* heuristic)
-               (expanded-nodes (filter-nodes *unfiltered-nodes* *open* *close*)))            
-          (add-explored 1)
-          (add-generate (length expanded-nodes))
-          (setq *close* (append *close* (list current-node)))
-          (cond ((funcall solution current-node) (stop-performance current-node)(return current-node)))
-          ;(setq *open* (append (cdr *open*) expanded-nodes))       
-          (setq *open* (ordered-insert-list (cdr *open*) expanded-nodes))
-          (setq *open* (filter-nodes-update-open *unfiltered-nodes* *open*))
-          ;Failsafe
-          ;(setq *open* (qsort *open* #'< cost))
-          (stable-sort *open* #'< :key cost)
-)))
+;;   (let ((*pecas-iniciais* (count-board-pieces (first node)) )))
+;;   (setq *open* (list *abertos*))
+;;   (setq *close* nil)
+;;   (loop while (not (null *open*)) do
+;;         (let* ((*noAtual* (car *open*)) 
+;;                (*unfiltered-nodes* (expand-node *noAtual* heuristic)
+;;                (expanded-nodes (filter-nodes *unfiltered-nodes* *open* *close*)))            
+;;           (add-explored 1)
+;;           (add-generate (length expanded-nodes))
+;;           (setq *close* (append *close* (list current-node)))
+;;           (cond ((funcall solution current-node) (stop-performance current-node)(return current-node)))
+;;           ;(setq *open* (append (cdr *open*) expanded-nodes))       
+;;           (setq *open* (ordered-insert-list (cdr *open*) expanded-nodes))
+;;           (setq *open* (filter-nodes-update-open *unfiltered-nodes* *open*))
+;;           ;Failsafe
+;;           ;(setq *open* (qsort *open* #'< cost))
+;;           (stable-sort *open* #'< :key cost)
+;; )))
   ;;  (cond
   ;;   ((= (length *abertos*) 0) nil)
   ;;   (T 
@@ -201,25 +198,32 @@
   (if (is-board-empty (first node)) nil)
     (remove nil 
       (list
-        (funcall attach-method 0 0 node)
-        (funcall attach-method 0 1 node) 
-        (funcall attach-method 0 2 node) 
-        (funcall attach-method 0 3 node) 
-        (funcall attach-method 0 4 node) 
-        (funcall attach-method 0 5 node) 
-        (funcall attach-method 1 0 node) 
-        (funcall attach-method 1 1 node) 
-        (funcall attach-method 1 2 node) 
-        (funcall attach-method 1 3 node) 
-        (funcall attach-method 1 4 node) 
-        (funcall attach-method 1 5 node)
+        (attach-parent-a 0 0 node heuristic)
+        (attach-parent-a 0 1 node heuristic) 
+        (attach-parent-a 0 2 node heuristic) 
+        (attach-parent-a 0 3 node heuristic) 
+        (attach-parent-a 0 4 node heuristic) 
+        (attach-parent-a 0 5 node heuristic) 
+        (attach-parent-a 1 0 node heuristic) 
+        (attach-parent-a 1 1 node heuristic) 
+        (attach-parent-a 1 2 node heuristic) 
+        (attach-parent-a 1 3 node heuristic) 
+        (attach-parent-a 1 4 node heuristic) 
+        (attach-parent-a 1 5 node heuristic)
   ) ) 
 )
 
-(defun attach-parent-a (line column node)
+(defun attach-parent-a (line column node heuristic)
   (if (equal (member (first node) (list (make-play line column (first node))) :test 'equal) nil)
-    (construct-node (make-play line column (first node)) node (count-board-pieces (first node)))
-  )
+     (board parent heuristic (count-board-pieces (first node))) 
+    ;; (create-node-from-state (make-play line column (first node)) node (count-board-pieces (first node)))
+  ))
+
+  
+(defun create-node-from-state (board parent heuristic o) 
+  (let ((g (1+ (caddr parent))))
+    (construct-node board parent g (- o ) ))
+)
 
 (defun expand-node (node) 
 "Expande um no, verificando as posicoes possiveis para cada peca"
