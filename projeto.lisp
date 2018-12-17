@@ -12,10 +12,6 @@
     (make-pathname :host "c" :directory '(:absolute "lisp") :name "problemas" :type "dat")
 )
 
-(defun get-results-path()
-    (make-pathname :host "c" :directory '(:absolute "lisp") :name "resultados" :type "dat")
-)
-
 
 (defun start ()
     (progn
@@ -34,13 +30,13 @@
 (defun start-search ()
   (progn
     (display-algorithms)
-    (let ((opt (ask-option 0 6)))
+    (let ((opt (ask-option 0 3)))
       (cond ((eq opt 0) (display-farewell))
         (T 
           (let* 
             ((board-node (get-file-board))
              (board board-node)
-             (node (list (construct-node board nil (count-board-pieces board))))
+             (node (construct-node board nil (count-board-pieces board)))
             )
               (ecase opt
                 (1
@@ -60,11 +56,6 @@
       )
     )
   )
-)
-
-(defun read-depth ()
-  (format t "~%~CProfundidade: " #\tab)
-  (read)
 )
 
 (defun get-file-board ()
@@ -131,64 +122,25 @@
     (format t "~%~C|                                |" #\tab)
     (format t "~%~C|     0 - Sair                   |" #\tab)
     (format t "~%~C|     1 - Resolver tabuleiro     |" #\tab)
+    (format t "~%~C|     1 - Mostrar um tabuleiro   |" #\tab)
     (format t "~%~C|                                |" #\tab)
     (format t "~%~C+--------------------------------+" #\tab)
 )
 
 (defun display-algorithms ()
-    (format t "~%~C+------------------------------------------+" #\tab)
-    (format t "~%~C|                                          |" #\tab)
-    (format t "~%~C|          Algoritmos Disponivéis          |" #\tab)
-    (format t "~%~C|                                          |" #\tab)
-    (format t "~%~C|      0 - Voltar                          |" #\tab)
-    (format t "~%~C|      1 - Breath-First Search             |" #\tab)
-    (format t "~%~C|      2 - Depth-First Search              |" #\tab)
-    (format t "~%~C|      3 - A*                              |" #\tab)
-    (format t "~%~C|      4 - Simplified Memory A*            |" #\tab)
-    (format t "~%~C|      5 - Interactive Deepening A*        |" #\tab)
-    (format t "~%~C|      6 - Recursive BestFirst Search      |" #\tab)
-    (format t "~%~C|                                          |" #\tab)
-    (format t "~%~C+------------------------------------------+" #\tab)
+    (format t "~%~C+--------------------------------+" #\tab)
+    (format t "~%~C|                                |" #\tab)
+    (format t "~%~C|      Algoritmos Disponivéis    |" #\tab)
+    (format t "~%~C|                                |" #\tab)
+    (format t "~%~C|     0 - Sair                   |" #\tab)
+    (format t "~%~C|     1 - Breath-First Search    |" #\tab)
+    (format t "~%~C|     2 - Depth-First Search     |" #\tab)
+    (format t "~%~C|     3 - A*                     |" #\tab)
+    (format t "~%~C|                                |" #\tab)
+    (format t "~%~C+--------------------------------+" #\tab)
 )
 
 (defun display-farewell ()
-  (format t "~%~C Cya!" #\tab)
+  (format t "~%~C Goodbye!" #\tab)
 )
 
-(defun current-time()
-"Retorna o tempo actual com o formato (h m s)"
-  ;;HORAS-MINUTOS-SEGUNDOS
-  (multiple-value-bind (s m h) (get-decoded-time)
-    (list h m s)
-   )
-)
-
-(defun write-to-file (solution)
-"Escreve, no ficheiro de resultados, a solucao e medidas de desempenho de um determinado problema"
-  (let* ((start-time (first solution))
-         (solution-path (second solution))
-         (end-time (third solution))
-         (nboard (fourth solution))
-         (search (fifth solution)))
-            (with-open-file (file (get-results-path) :direction :output :if-exists :append :if-does-not-exist :create)
-                (ecase search
-                      ('BFS (write-bfsdfs-statistics file solution-path start-time end-time nboard 'BFS ))         
-                )
-            )
-  )
-)
-
-(defun write-bfsdfs-statistics (stream solution-path start-time end-time nboard search &optional depth)
-"Escreve a solucao e medidas de desempenho para os algoritmos bfs e dfs"
-  (progn 
-    (format stream "~%* Resolucao do Tabuleiro ~a *" nboard)
-    (format stream "~%~t> Algoritmo: ~a " search)
-    (format stream "~%~t> inicio: ~a:~a:~a" (first start-time) (second start-time) (third start-time))
-    (format stream "~%~t> Fim: ~a:~a:~a" (first end-time) (second end-time) (third end-time))
-    (format stream "~%~t> Estado Inicial")
-    (print-board (last (second solution-path)) stream)
-    (format stream "~%~t> Estado Final")
-    (print-board (first solution-path) stream)
-    (format stream "~%")
-  )
-)
