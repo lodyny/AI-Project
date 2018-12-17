@@ -127,3 +127,27 @@
         ((listp (car list)) (append (car list) (single-list (cdr list))))
     )
 )
+
+(defun base-heuristic (node)
+"Project Heuristic (Number of pieces on board - Number of pieces to capture on board)"
+    (- (count-board-pieces (get-node-state node)) (count-board-pieces (get-node-state (get-node-root-parent node))))
+)
+
+(defun best-heuristic (node)
+"Heuristica desenvolvida pelos autores. Consultar manual tecnico para posterior explicacao"
+    ()
+)
+
+(defun win-plays (board &opcional (plays-left 12))
+
+)
+
+(defun number-spaces-occupied(board)
+"Devolve o numero de espacos ocupados num tabuleiro"
+  (apply '+ (mapcar #'(lambda(row) (number-spaces-occupied-row row)) board))
+)
+
+(defun number-spaces-occupied-row(row)
+"Devolve o numero de espacos ocupados numa linha"
+  (apply '+ (mapcar #'(lambda(node) (if (= node 0) 0 1)) row))
+)

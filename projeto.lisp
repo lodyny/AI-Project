@@ -41,7 +41,7 @@
 "Start the searching algorithm"
   (progn
     (display-algorithms)
-    (let ((opt (ask-option 0 3)))
+    (let ((opt (ask-option 0 4)))
       (cond ((eq opt 0) (display-farewell))
         (T 
           (let* 
@@ -58,6 +58,18 @@
                    (let* ((depth (read-depth))
                                     (solution (list (current-time) (dfs node depth) (current-time) node 'DFS depth)))
                                  (progn (write-statistics solution) solution)
+                             )
+                 )
+                (3
+                 (let* ((heuristic (read-heuristic))
+                                    (solution (list (current-time) (A* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board 'A*)))
+                              (progn (write-statistics solution) solution)
+                             )
+                 )
+                (4
+                 (let* ((heuristic (read-heuristic))
+                                    (solution (list (current-time) (IDA* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board 'IDA*)))
+                              (progn (write-statistics solution) solution) 
                              )
                  )
               )
@@ -96,7 +108,7 @@
 
 (defun option-text ()
 "Ask the user for some input"
-  (format t "~%~COp��o: " #\tab)
+  (format t "~%~COpcao: " #\tab)
   (read)
 )
 
@@ -138,12 +150,13 @@
 "Display to the user the available algorithms to choose from"
     (format t "~%~C+--------------------------------+" #\tab)
     (format t "~%~C|                                |" #\tab)
-    (format t "~%~C|      Algoritmos Disponiv�is    |" #\tab)
+    (format t "~%~C|      Algoritmos Disponiveis    |" #\tab)
     (format t "~%~C|                                |" #\tab)
     (format t "~%~C|     0 - Sair                   |" #\tab)
     (format t "~%~C|     1 - Breath-First Search    |" #\tab)
     (format t "~%~C|     2 - Depth-First Search     |" #\tab)
     (format t "~%~C|     3 - A*                     |" #\tab)
+    (format t "~%~C|     4 - IDA*                   |" #\tab)
     (format t "~%~C|                                |" #\tab)
     (format t "~%~C+--------------------------------+" #\tab)
 )
@@ -180,6 +193,8 @@
                 (ecase search
                       ('BFS (write-bfsdfs-stats file solution-path start-time end-time nboard 'BFS ))         
                       ('DFS (let ((depth (sixth solution))) (write-bfsdfs-stats file solution-path start-time end-time nboard 'DFS depth)))
+                      ('A* (write-a*-statistics file solution-path start-time end-time nboard 'A* ))
+                      ('IDA* (write-ida*-statistics file solution-path start-time end-time nboard 'IDA* ))
                 )
             )
   )
@@ -203,7 +218,67 @@
     (print-board (first (first solution-path)) stream)
     (format stream "~%~t> Estado Final")
     (print-board (solution-node solution-path) stream)
+    (format stream "~%~%")
   )
+)
+
+(defun write-a*-statistics (stream solution-path start-time end-time nboard search)
+"Escreve a solucao e medidas de desempenho para o algoritmo A*"
+  (progn 
+    (format stream "~%* Resolucao do Tabuleiro ~a *" nboard)
+    (format stream "~%~t> Algoritmo: ~a " search)
+    (format stream "~%~t> Inicio ~a:~a:~a" (first start-time) (second start-time) (third start-time))
+    (format stream "~%~t> Fim: ~a:~a:~a" (first end-time) (second end-time) (third end-time))
+    (format stream "~%~t> Numero de nos gerados: ~a" (number-generated-nodes solution-path))
+    (format stream "~%~t> Numero de nos expandidos: ~a" (number-expanded-nodes-a* solution-path))
+    (format stream "~%~t> Penetrancia; ~F" (penetrance solution-path))
+    (format stream "~%~t> Fator de ramificacao media: ~F" (branching-factor solution-path))
+    (format stream "~%~t> Comprimento da solucao: ~a" (solution-length solution-path))
+    (format stream "~%~t> Estado Inicial")
+    (print-board (first (first solution-path)) stream)
+    (format stream "~%~t> Estado Final")
+    (print-board (solution-node solution-path) stream)
+    (format stream "~%~%")
   )
+)
 
+(defun write-ida*-statistics (stream solution-path start-time end-time nboard search)
+"Escreve a solucao e medidas de desempenho para o algoritmo IDA*"
+  (progn 
+    (format stream "~%* Resolucao do Tabuleiro ~a *" nboard)
+    (format stream "~%~t> Algoritmo: ~a " search)
+    (format stream "~%~t> Inicio: ~a:~a:~a" (first start-time) (second start-time) (third start-time))
+    (format stream "~%~t> Fim: ~a:~a:~a" (first end-time) (second end-time) (third end-time))
+    (format stream "~%~t> Numero de nos gerados: ~a" (number-generated-nodes-ida* solution-path))
+    (format stream "~%~t> Numero de nos expandidos: ~a" (number-expanded-nodes-a* solution-path))
+    (format stream "~%~t> Penetrancia: ~F" (penetrance solution-path))
+    (format stream "~%~t> Fator de ramificacao media: ~F" (branching-factor solution-path))
+    (format stream "~%~t> Comprimento da solucao: ~a" (solution-length solution-path))
+    (format stream "~%~t> Estado Inicial")
+    (print-board (first (first solution-path)) stream)
+    (format stream "~%~t> Estado Final")
+    (print-board (solution-node solution-path) stream)
+    (format stream "~%~%")
+  )
+)
 
+(defun read-heuristic-message()
+"Apresenta a mensagem para escolher a heuristica"
+  (format t "   ~% ---------------------------------------------------------")
+  (format t "   ~%|             BLOKUS UNO - Escolha a heuristica           |")
+  (format t "   ~%|                1 - heuristica Enunciado                 |")
+  (format t "   ~%|                2 - heuristica Criada                    |")
+  (format t "   ~%|                0 - Voltar                               |")
+  (format t "   ~% ---------------------------------------------------------~%~%> ")
+)
+
+(defun read-heuristic()
+"Le a heuristica escolhida no menu"
+  (if (not (read-heuristic-message))
+      (let ((opt (read)))
+         (cond ((eq opt '0) (start 0))
+               ((or (not (numberp opt)) (< opt 0)) (progn (format t "Insira uma opcao valida")) (read-heuristic))
+               ((eq opt 1) 'base-heuristic)
+               (T 'best-heuristic)
+     )))
+)
