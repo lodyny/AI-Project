@@ -13,16 +13,16 @@
               (expanded-list (expand-node current-node)))
         (if (equal (is-board-empty (first current-node)) T)
           (list (get-solution-path current-node) (length open) (length closed))
-          (BFS  (concatenate 'list (cdr open) (remove-nil (remove-duplicated-nodes expanded-list open closed))) (concatenate 'list closed (list current-node)))))))))
+          (BFS  (concatenate 'list (rest open) (remove-nil (remove-duplicated-nodes expanded-list open closed))) (concatenate 'list closed (list current-node)))))))))
 
 (defun DFS (open max-depth &optional (closed '()))
 "Depth-First Search"
    (cond ((= (length open) 0) nil)
-    ((> (length (get-solution-path (first open))) max-depth) (DFS (rest open) max-depth (concatenate 'list closed (car open))))
+    ((> (length (get-solution-path (first open))) max-depth) (DFS (rest open) max-depth (concatenate 'list closed (first open))))
     (T (let* ((current-node (first open))(expanded-list (expand-node current-node)))
       (if (equal (is-board-empty (get-current-node current-node)) T)
         (list (get-solution-path current-node) (length open) (- (length (get-solution-path (first open))) 1 ))
-          (DFS  (concatenate 'list expanded-list (cdr open)) max-depth (concatenate 'list closed (list current-node))))))))
+          (DFS  (concatenate 'list expanded-list (rest open)) max-depth (concatenate 'list closed (list current-node))))))))
 
 
 (defun A*(expandFunction hFunction open &optional (closed '()) (expanded-nodes 0))
@@ -31,13 +31,13 @@
    (T (let* ((chosen-node (get-lowest-f open))
             (expanded-list (funcall expandFunction chosen-node hFunction))
             (recalculated-closed (recalculate-closed expanded-list closed chosen-node))
-            (recalculated-open (recalculate-open expanded-list (cdr open) chosen-node))
+            (recalculated-open (recalculate-open expanded-list (rest open) chosen-node))
             (new-open (remove-nil (append recalculated-open (remove-duplicate-values expanded-list recalculated-open) recalculated-closed))))
         (if (=  (length expanded-list) 0)
           (list (get-solution-path chosen-node) (length open) (length closed) expanded-nodes)
           (A* expandFunction hFunction new-open (remove-duplicate-values (concatenate 'list closed (list chosen-node)) recalculated-closed) (1+ expanded-nodes)))))))
 
-(defun IDA*(expandFunction hFunction open &optional (closed '()) (limiar (get-node-f (car open))) (temp-open-nodes-length 0) (expanded-nodes 0))
+(defun IDA*(expandFunction hFunction open &optional (closed '()) (limiar (get-node-f (first open))) (temp-open-nodes-length 0) (expanded-nodes 0))
 "Iterative Deepening A-START Algorithm"
   (cond
    ((= (length open) 0) nil)
@@ -48,7 +48,7 @@
          (let*
             ((expanded-list (funcall expandFunction chosen-node hFunction))
             (recalculated-closed (recalculate-closed expanded-list closed chosen-node))
-            (recalculated-open (recalculate-open expanded-list (cdr open) chosen-node))
+            (recalculated-open (recalculate-open expanded-list (rest open) chosen-node))
             (new-open (remove-nil (append recalculated-open (remove-duplicate-values expanded-list recalculated-open) recalculated-closed))))
       (if (=  (length expanded-list) 0)
        (list (get-solution-path chosen-node) (length open) (length closed) expanded-nodes temp-open-nodes-length)     
@@ -71,7 +71,7 @@
 "Remove from the list duplicated values"
   (if (or (null list1) (null list2))
       list1
-      (remove-nil (mapcar #'(lambda(x) (if (eval (cons 'or (mapcar #'(lambda(n) (equal (car x) (car n))) list2))) NIL x)) list1))
+      (remove-nil (mapcar #'(lambda(x) (if (eval (cons 'or (mapcar #'(lambda(n) (equal (first x) (first n))) list2))) NIL x)) list1))
   )
 )
 
@@ -111,7 +111,7 @@
 "Return list with all the path from the beginning to the solution"
   (cond 
    ((null (rest node)) '())
-   (T (append (get-solution-path (second node)) (list (car node))))
+   (T (append (get-solution-path (second node)) (list (first node))))
    )
 )
 
@@ -123,8 +123,8 @@
 (defun change-position-value(list position value)
 "Change the size of a list in the received position and return new list"
   (cond 
-   ((= position 0) (cons value (cdr list)))
-   (T (cons (car list) (change-position-value (cdr list) (1- position) value)))
+   ((= position 0) (cons value (rest list)))
+   (T (cons (first list) (change-position-value (rest list) (1- position) value)))
    )
 )
 
@@ -162,12 +162,12 @@
 
 (defun solution-node(list)
 "Return the solution node from the list"
-  (nth (1- (length (car list))) (car list))
+  (nth (1- (length (first list))) (first list))
 )
 
 (defun solution-length (list)
 "Return the length of the solution"
- (length (car list))
+ (length (first list))
 )
 
 (defun number-expanded-nodes-bfsdfs (list)
@@ -206,23 +206,23 @@
 
 (defun get-node-state (node)
 "Return the board of the node"
-	(car node)
+	(first node)
 )
 
-(defun recalculate-open(expanded-list open father-node)
-"Used to returning list of open nodes recalculated, assign the highest f to the father node"
+(defun recalculate-open(expanded-list open parent-node)
+"Used to returning list of open nodes recalculated, assign the highest f to the parent node"
   (mapcar #'(lambda(open-node)
               (let ((list-open (recalculate-node open-node expanded-list)))
-                (if (null list-open) open-node (change-father-node (car list-open) father-node))
+                (if (null list-open) open-node (change-parent-node (first list-open) parent-node))
                 )
               ) open)                         
 )
   
-(defun recalculate-closed(expanded-list closed father-node)
-"Used to returning list of closed nodes recalculated, assign the highest f to the father node"
+(defun recalculate-closed(expanded-list closed parent-node)
+"Used to returning list of closed nodes recalculated, assign the highest f to the parent node"
   (mapcar #'(lambda(closed-node)
               (let ((list-closed (recalculate-node closed-node expanded-list)))
-                (if (null list-closed) nil (change-father-node (car list-closed) father-node))
+                (if (null list-closed) nil (change-parent-node (first list-closed) parent-node))
                 )
               ) closed)                         
 )
@@ -238,7 +238,7 @@
                                       ) expanded-list))
 )
 
-(defun change-father-node(node parent-node)
+(defun change-parent-node(node parent-node)
 "Change parent node with a new value"
   (change-position-value node '1 parent-node)
 )
@@ -250,12 +250,12 @@
 
 (defun get-node-g(node)
 "Return the G value from the node"
-	(nth 2 node)
+	(third node)
 )
 
 (defun get-node-h(node)
 "Return the H value from the node"
-	(nth 3 node)
+	(fourth node)
 )
 
 (defun provide-new-f(node newG newH)
@@ -278,7 +278,7 @@
 
 (defun get-node-parent (node)
 "Return the parent of the node"
-	(cadr node)
+	(second node)
 )
 
 (defun get-max-value-nodes(open max-value)
