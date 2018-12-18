@@ -2,77 +2,62 @@
 ;; Developed by Cesar Nero and David Afonso
 ;; Artificial Intelligence - IPS 2018/2019
 
+;; LOAD FILES & CONFIGURATION
+(defun get-default-path (file-name file-type)
+"Return the problems.dat path from the standard path 'C:/lisp/problems.dat'"
+  (make-pathname :host "c" :directory '(:absolute "adjiboto") :name (string file-name) :type (string file-type))
+)
+
 (defun load-files ()
-"Load the files from the standard path 'C:/lisp'"
+"Load the projects files needed to the correct function of the program"
   (format t "A iniciar processo de carregamento de ficheiros...")
-  (compile-file "C:/Users/cesarnero/Documents/GitHub/Projecto-IA/puzzle" :load t)
-  (compile-file "C:/Users/cesarnero/Documents/GitHub/Projecto-IA/procura" :load t)
+  (compile-file (get-default-path 'puzzle 'lisp) :load t)
+  (compile-file (get-default-path 'procura 'lisp) :load t)
   (format t "Carregamento terminado com sucesso, a iniciar jogo...~%")
 )
 
-(defun get-problems-path()
-"Return the problems.dat path from the standard path 'C:/lisp/problems.dat'"
-    (make-pathname :host "c" :directory '(:absolute "lisp") :name "problemas" :type "dat")
-)
-
-(defun get-results-path()
-"Return the problems.dat path from the standard path 'C:/lisp/results.dat'"
-    (make-pathname :host "c" :directory '(:absolute "lisp") :name "results" :type "dat")
-)
-
-(defun start (&optional(loadfiles 1))
+;; MAIN FUNCTIONS
+(defun start (&optional (loadfiles 1))
 "Start the program"
-    (progn
-      (if (= loadfiles 1) (load-files)) 
-        (display-menu)
-        (let ((opt (ask-option 0 2)))
-          (ecase opt
-            ('0 (display-farewell))
-            ('1 (let ((solution-board (start-search)))
-                  solution-board))
-            ('2 (let ((board (get-file-board)))
-                  (if (listp board) (print-board board))) (start 0))
-           )
-         )
+  (if (= loadfiles 1) (load-files)) 
+  (display-menu)
+  (let ((opt (get-option 0 2)))
+    (ecase opt
+      ('0 (display-farewell))
+      ('1 (let ((board (get-file-board)))
+        (if (listp board) (print-board board))) (start 0)
+      )
+      ('2 (let ((solution-board (begin-search))) solution-board))
     )
+  )
 )
 
-(defun start-search ()
-"Start the searching algorithm"
-  (progn
-    (display-algorithms)
-    (let ((opt (ask-option 0 4)))
-      (cond ((eq opt 0) (display-farewell))
-        (T 
-          (let* 
-            ((board (get-file-board))
-             (node (list (construct-node board nil (count-board-pieces board))))
+(defun begin-search ()
+"Start one of the searching algorithms"
+  (display-algorithms)
+  (let ((opt (get-option 0 4)))
+    (cond 
+      ((eq opt 0) (display-farewell))
+      (T (let* 
+        ((board (get-file-board))
+        (node (list (construct-node board nil (count-board-pieces board)))))
+          (ecase opt
+            (1
+              (let ((solution (list (current-time) (bfs node) (current-time) board)))
+                (progn (write-statistics solution 'BFS) solution))          
             )
-              (ecase opt
-                (1
-                   (let ((solution (list (current-time) (bfs node) (current-time) node 'BFS)))
-                   (progn (write-statistics solution) solution)
-                   )          
-                )
-                (2
-                   (let* ((depth (read-depth))
-                                    (solution (list (current-time) (dfs node depth) (current-time) node 'DFS depth)))
-                                 (progn (write-statistics solution) solution)
-                             )
-                 )
-                (3
-                 (let* ((heuristic (read-heuristic))
-                                    (solution (list (current-time) (A* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board 'A*)))
-                              (progn (write-statistics solution) solution)
-                             )
-                 )
-                (4
-                 (let* ((heuristic (read-heuristic))
-                                    (solution (list (current-time) (IDA* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board 'IDA*)))
-                              (progn (write-statistics solution) solution) 
-                             )
-                 )
-              )
+            (2
+              (let* ((depth (get-depth)) (solution (list (current-time) (dfs node depth) (current-time) board depth)))
+                (progn (write-statistics solution 'DFS) solution))
+            )
+            (3
+              (let* ((heuristic (get-heuristic)) (solution (list (current-time) (A* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board)))
+                (progn (write-statistics solution 'A*) solution))
+            )
+            (4
+              (let* ((heuristic (get-heuristic)) (solution (list (current-time) (IDA* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board)))
+                (progn (write-statistics solution 'IDA*) solution))
+            )
           )
         )
       )
@@ -80,59 +65,7 @@
   )
 )
 
-(defun get-file-board ()
-"Read one of the available boards"
-  (progn
-    (display-file-boards)
-    (let ((opt (ask-option 0 (length (read-file-boards)))))
-      (cond
-        ((eq 0 opt) (start 0))
-        (T (nth (1- opt) (read-file-boards)))
-      )
-    )
-  )
-)
-
-(defun read-file-boards ()
-"Read boards from file"
-   (with-open-file (file (get-problems-path) :if-does-not-exist nil)
-     (do ((result nil (cons next result))
-        	(next (read file nil 'eof) (read file nil 'eof)))
-                ((equal next 'eof) (reverse result))
-     )
-  )
-)
-
-
-;;; INPUT/OUTPUT FUNCTIONS
-
-(defun option-text ()
-"Ask the user for some input"
-  (format t "~%~COpcao: " #\tab)
-  (read)
-)
-
-(defun option-invalid-text ()
-"Display to the user that the option was invalid"
-  (progn
-    (format t "~COps, op��o inv�lida!" #\tab)
-   )
-)
-
-(defun ask-option (min max)
-"Ask the user for some input between the range received (min~max)"
-  (let ((opt (option-text)))
-    (cond ((not (numberp opt)) (progn (option-invalid-text) (ask-option min max)))
-          ((or (> opt max) (< opt min)) (progn (option-invalid-text) (ask-option min max)))
-          (t opt))
-  )
-)
-
-(defun read-depth ()	
-  (format t "~%~CProfundidade: " #\tab)	
-  (read)	
-)
-
+;; OUTPUT FUNCTIONS
 (defun display-menu ()
 "Display to the user the main menu"
     (format t "~%~C+--------------------------------+" #\tab)
@@ -140,8 +73,8 @@
     (format t "~%~C|   Bem-vindo(a) ao Adji-boto!   |" #\tab)
     (format t "~%~C|                                |" #\tab)
     (format t "~%~C|     0 - Sair                   |" #\tab)
-    (format t "~%~C|     1 - Resolver tabuleiro     |" #\tab)
-    (format t "~%~C|     2 - Mostrar um tabuleiro   |" #\tab)
+    (format t "~%~C|     1 - Mostrar um tabuleiro   |" #\tab)
+    (format t "~%~C|     2 - Resolver tabuleiro     |" #\tab)
     (format t "~%~C|                                |" #\tab)
     (format t "~%~C+--------------------------------+" #\tab)
 )
@@ -162,123 +95,127 @@
 )
 
 (defun display-file-boards (&optional(i 1) (problems (read-file-boards)))
-"Display to the user all available boards to choose from problems.dat"	
-  (cond ((null problems) (progn   
-                           (format t "~%~C|             0 - Sair                      |" #\tab)
-                           (format t "~%~C+-------------------------------------------+" #\tab)))
-   (T (progn (if (= i 1) (progn 
-                           (format t "~%~C+-------------------------------------------+" #\tab)
-                           (format t "~%~C|     ADJI BOTO - Tabuleiros Disponiveis    |" #\tab)))
-        (format t "~%~C|             ~a - Tabuleiro ~a               |" #\tab i i) 
-        (display-file-boards (+ i 1) (cdr problems))))))
+"Display to the user all available boards to choose from the file problemas.dat; if empty only show exit option"	
+  (cond ((null problems)
+    (progn   
+      (format t "~%~C|             0 - Sair                      |" #\tab)
+      (format t "~%~C+-------------------------------------------+" #\tab)))
+  (T (progn (if (= i 1) (progn 
+      (format t "~%~C+-------------------------------------------+" #\tab)
+      (format t "~%~C|     ADJI BOTO - Tabuleiros Disponiveis    |" #\tab)))
+      (format t "~%~C|             ~a - Tabuleiro ~a               |" #\tab i i) 
+      (display-file-boards (+ i 1) (cdr problems))))
+  )
+)
 
 (defun display-farewell ()
 "Display to the user a goodbye message"
   (format t "~%~CGoodbye!" #\tab)
 )
 
-;;; STATISTICS FUNCTIONS
+(defun display-heuristic()
+"Display the option of heuristic to the user. Default one or team made."
+  (format t "   ~%+--------------------------------------------+")
+  (format t "   ~%|    Qual a heuristica que pretende usar?    |")
+  (format t "   ~%|          1 - heuristica Enunciado          |")
+  (format t "   ~%|          2 - heuristica Criada             |")
+  (format t "   ~%|          0 - Voltar                        |")
+  (format t "   ~%+--------------------------------------------+~%~%> ")
+)
+
+(defun option-text ()
+"Ask the user for some input"
+  (format t "~%~COpcao: " #\tab)
+  (read)
+)
+
+(defun option-invalid-text ()
+"Display to the user that the option was invalid"
+  (progn
+    (format t "~COps, opcao invalida!" #\tab)
+   )
+)
+
 (defun current-time()
 "Return the current time on the format of hh:mm:ss"
-(multiple-value-bind (s m h) (get-decoded-time) (list h m s)))
+  (multiple-value-bind (s m h) (get-decoded-time) (list h m s))
+)
 
-(defun write-statistics (solution)
-"Write the solution to the destination file, default: 'C:/lisp/results.dat'"
-(let* ((start-time (first solution))
-         (solution-path (second solution))
-         (end-time (third solution))
-         (nboard (fourth solution))
-         (search (fifth solution)))
-            (with-open-file (file (get-results-path) :direction :output :if-exists :append :if-does-not-exist :create)
-                (ecase search
-                      ('BFS (write-bfsdfs-stats file solution-path start-time end-time nboard 'BFS ))         
-                      ('DFS (let ((depth (sixth solution))) (write-bfsdfs-stats file solution-path start-time end-time nboard 'DFS depth)))
-                      ('A* (write-a*-statistics file solution-path start-time end-time nboard 'A* ))
-                      ('IDA* (write-ida*-statistics file solution-path start-time end-time nboard 'IDA* ))
-                )
-            )
+;; INPUT FUNCTIONS
+(defun get-option (min max)
+"Ask the user for some input between the range received (min~max)"
+  (let ((opt (option-text)))
+    (cond ((not (numberp opt)) (progn (option-invalid-text) (get-option min max)))
+          ((or (> opt max) (< opt min)) (progn (option-invalid-text) (get-option min max)))
+          (t opt))
   )
 )
 
-(defun write-bfsdfs-stats (stream solution-path start-time end-time nboard search &optional depth)
-"Write BFS or DFS Statistics to the file"
-  (progn 
-    (format stream "~%* Resolucao do Tabuleiro ~a *" nboard)
-    (format stream "~%~t> Algoritmo: ~a " search)
-    (format stream "~%~t> Inicio: ~a:~a:~a" (first start-time) (second start-time) (third start-time))
-    (format stream "~%~t> Fim: ~a:~a:~a" (first end-time) (second end-time) (third end-time))
-    (format stream "~%~t> Numero de nos gerados: ~a" (number-generated-nodes solution-path))
-    (format stream "~%~t> Numero de nos expandidos: ~a" (number-expanded-nodes-bfsdfs solution-path))
-    (format stream "~%~t> Penetrancia: ~F" (penetrance solution-path))
-    (format stream "~%~t> Fator de ramificacao media ~F" (branching-factor solution-path))
-    (if (eq search 'DFS)
-        (format stream "~%~t> Profundidade maxima: ~a" depth))
-    (format stream "~%~t> Comprimento da solucao ~a" (solution-length solution-path))
-    (format stream "~%~t> Estado Inicial")
-    (print-board (first (first solution-path)) stream)
-    (format stream "~%~t> Estado Final")
-    (print-board (solution-node solution-path) stream)
-    (format stream "~%~%")
-  )
+(defun get-depth ()	
+"Ask the user for the depth"
+  (format t "~%~CProfundidade: " #\tab)	
+  (read)	
 )
 
-(defun write-a*-statistics (stream solution-path start-time end-time nboard search)
-"Escreve a solucao e medidas de desempenho para o algoritmo A*"
-  (progn 
-    (format stream "~%* Resolucao do Tabuleiro ~a *" nboard)
-    (format stream "~%~t> Algoritmo: ~a " search)
-    (format stream "~%~t> Inicio ~a:~a:~a" (first start-time) (second start-time) (third start-time))
-    (format stream "~%~t> Fim: ~a:~a:~a" (first end-time) (second end-time) (third end-time))
-    (format stream "~%~t> Numero de nos gerados: ~a" (number-generated-nodes solution-path))
-    (format stream "~%~t> Numero de nos expandidos: ~a" (number-expanded-nodes-a* solution-path))
-    (format stream "~%~t> Penetrancia; ~F" (penetrance solution-path))
-    (format stream "~%~t> Fator de ramificacao media: ~F" (branching-factor solution-path))
-    (format stream "~%~t> Comprimento da solucao: ~a" (solution-length solution-path))
-    (format stream "~%~t> Estado Inicial")
-    (print-board (first (first solution-path)) stream)
-    (format stream "~%~t> Estado Final")
-    (print-board (solution-node solution-path) stream)
-    (format stream "~%~%")
-  )
-)
-
-(defun write-ida*-statistics (stream solution-path start-time end-time nboard search)
-"Escreve a solucao e medidas de desempenho para o algoritmo IDA*"
-  (progn 
-    (format stream "~%* Resolucao do Tabuleiro ~a *" nboard)
-    (format stream "~%~t> Algoritmo: ~a " search)
-    (format stream "~%~t> Inicio: ~a:~a:~a" (first start-time) (second start-time) (third start-time))
-    (format stream "~%~t> Fim: ~a:~a:~a" (first end-time) (second end-time) (third end-time))
-    (format stream "~%~t> Numero de nos gerados: ~a" (number-generated-nodes-ida* solution-path))
-    (format stream "~%~t> Numero de nos expandidos: ~a" (number-expanded-nodes-a* solution-path))
-    (format stream "~%~t> Penetrancia: ~F" (penetrance solution-path))
-    (format stream "~%~t> Fator de ramificacao media: ~F" (branching-factor solution-path))
-    (format stream "~%~t> Comprimento da solucao: ~a" (solution-length solution-path))
-    (format stream "~%~t> Estado Inicial")
-    (print-board (first (first solution-path)) stream)
-    (format stream "~%~t> Estado Final")
-    (print-board (solution-node solution-path) stream)
-    (format stream "~%~%")
-  )
-)
-
-(defun read-heuristic-message()
-"Apresenta a mensagem para escolher a heuristica"
-  (format t "   ~% ---------------------------------------------------------")
-  (format t "   ~%|             BLOKUS UNO - Escolha a heuristica           |")
-  (format t "   ~%|                1 - heuristica Enunciado                 |")
-  (format t "   ~%|                2 - heuristica Criada                    |")
-  (format t "   ~%|                0 - Voltar                               |")
-  (format t "   ~% ---------------------------------------------------------~%~%> ")
-)
-
-(defun read-heuristic()
-"Le a heuristica escolhida no menu"
-  (if (not (read-heuristic-message))
+(defun get-heuristic()
+"Ask the user for the heuristic"
+  (if (not (display-heuristic))
       (let ((opt (read)))
          (cond ((eq opt '0) (start 0))
-               ((or (not (numberp opt)) (< opt 0)) (progn (format t "Insira uma opcao valida")) (read-heuristic))
+               ((or (not (numberp opt)) (< opt 0)) (progn (format t "Insira uma opcao valida")) (get-heuristic))
                ((eq opt 1) 'base-heuristic)
                (T 'best-heuristic)
      )))
+)
+
+(defun get-file-board ()
+"Get all the files and based on the length of the list returning ask the user for input"
+  (progn
+    (display-file-boards)
+    (let ((opt (get-option 0 (length (read-file-boards)))))
+      (cond
+        ((eq 0 opt) (start 0))
+        (T (nth (1- opt) (read-file-boards)))
+      )
+    )
+  )
+)
+
+(defun read-file-boards ()
+"Read all the boards from the file problemas.dat"
+  (with-open-file (file (get-default-path 'problemas 'dat) :if-does-not-exist nil)
+    (do ((result nil (cons next result))
+      (next (read file nil 'eof) (read file nil 'eof)))
+        ((equal next 'eof) (reverse result))
+    )
+  )
+)
+
+;; STATISTICS FUNCTIONS
+(defun write-statistics (solution algorithm)
+"Write statistics about the solution based on the type of algorithm received, output to the file resultados.dat"
+(let* ((begin-time (first solution))
+         (solution-path (second solution))
+         (finish-time (third solution))
+         (nboard (fourth solution))
+         (depth (fifth solution)))
+            (with-open-file (stream (get-default-path 'resultados 'dat) :direction :output :if-exists :append :if-does-not-exist :create)
+              (progn 
+                (format stream "~%~C Tabuleiro: ~a " #\tab nboard)
+                (format stream "~%~C Algoritmo: ~a " #\tab algorithm)
+                (format stream "~%~C Inicio: ~a:~a:~a ~C Fim: ~a:~a:~a" #\tab (first begin-time) (second begin-time) (third begin-time) #\tab (first finish-time) (second finish-time) (third finish-time))
+                (format stream "~%~C Numero de nos gerados: ~a" #\tab (number-generated-nodes solution-path))
+                (format stream "~%~C Numero de nos expandidos: ~a" #\tab (number-expanded-nodes-bfsdfs solution-path))
+                (format stream "~%~C Penetrancia: ~F" #\tab (penetrance solution-path))
+                (format stream "~%~C Fator de ramificacao media: ~F" #\tab (branching-factor solution-path))
+                (format stream "~%~C Profundidade maxima atingida: ~a" #\tab depth)
+                (format stream "~%~C Comprimento da solucao: ~a" #\tab (solution-length solution-path))
+                (format stream "~%~C Estado Inicial do Tabuleiro:" #\tab)
+                (print-board (first (first solution-path)) stream)
+                (format stream "~%~C Estado Final do Tabuleiro:" #\tab)
+                (print-board (solution-node solution-path) stream)
+                (format stream "~%~%")
+              )
+            )
+  )
 )

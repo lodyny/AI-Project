@@ -134,12 +134,8 @@
 )
 
 (defun best-heuristic (node)
-"Heuristica desenvolvida pelos autores. Consultar manual tecnico para posterior explicacao"
-    ()
-)
-
-(defun win-plays (board &opcional (plays-left 12))
-
+"Improved Heuristic that take into count if is possible to make point in the board or not"
+    (- (count-board-pieces (get-node-state node)) (count-board-pieces (get-node-state (get-node-root-parent node))))
 )
 
 (defun number-spaces-occupied(board)

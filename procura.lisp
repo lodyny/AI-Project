@@ -85,6 +85,7 @@
 (defun get-lowest-f(node)
 "Retorna o no de uma lista com o valor f mais baixo"
   (cond
+   ((null node) nil)
    ((= (length node) 1) (first node))
    (T (let ((recursive-node (get-lowest-f(rest node))))
     (if (< (get-node-f (first node)) (get-node-f recursive-node))
@@ -161,7 +162,7 @@
 
 (defun attach-parent (line column node)
   (if (equal (member (first node) (list (make-play line column (first node))) :test 'equal) nil)
-    (construct-node (make-play line column (first node)) node (count-board-pieces (first node)))
+    (construct-node (make-play line column (first node)) node (count-board-pieces (first node)) (1+ (get-node-g node)))
   )
 )
 
