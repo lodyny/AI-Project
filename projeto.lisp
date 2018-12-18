@@ -98,12 +98,12 @@
 "Display to the user all available boards to choose from the file problemas.dat; if empty only show exit option"	
   (cond ((null problems)
     (progn   
-      (format t "~%~C|             0 - Sair                      |" #\tab)
-      (format t "~%~C+-------------------------------------------+" #\tab)))
+      (format t "~%~C|        0 - Sair                  |" #\tab)
+      (format t "~%~C+----------------------------------+" #\tab)))
   (T (progn (if (= i 1) (progn 
-      (format t "~%~C+-------------------------------------------+" #\tab)
-      (format t "~%~C|     ADJI BOTO - Tabuleiros Disponiveis    |" #\tab)))
-      (format t "~%~C|             ~a - Tabuleiro ~a               |" #\tab i i) 
+      (format t "~%~C+----------------------------------+" #\tab)
+      (format t "~%~C|       Tabuleiros Disponiveis     |" #\tab)))
+      (format t "~%~C|        ~a - Tabuleiro ~a           |" #\tab i i) 
       (display-file-boards (+ i 1) (cdr problems))))
   )
 )
@@ -115,12 +115,12 @@
 
 (defun display-heuristic()
 "Display the option of heuristic to the user. Default one or team made."
-  (format t "   ~%+--------------------------------------------+")
-  (format t "   ~%|    Qual a heuristica que pretende usar?    |")
-  (format t "   ~%|          1 - heuristica Enunciado          |")
-  (format t "   ~%|          2 - heuristica Criada             |")
-  (format t "   ~%|          0 - Voltar                        |")
-  (format t "   ~%+--------------------------------------------+~%~%> ")
+  (format t "   ~%~C+--------------------------------------------+" #\tab)
+  (format t "   ~%~C|    Qual a heuristica que pretende usar?    |" #\tab)
+  (format t "   ~%~C|          0 - Voltar                        |" #\tab)
+  (format t "   ~%~C|          1 - Heuristica Original           |" #\tab)
+  (format t "   ~%~C|          2 - Heuristica Nova               |" #\tab)
+  (format t "   ~%~C+--------------------------------------------+" #\tab)
 )
 
 (defun option-text ()
@@ -160,12 +160,14 @@
 (defun get-heuristic()
 "Ask the user for the heuristic"
   (if (not (display-heuristic))
-      (let ((opt (read)))
-         (cond ((eq opt '0) (start 0))
-               ((or (not (numberp opt)) (< opt 0)) (progn (format t "Insira uma opcao valida")) (get-heuristic))
-               ((eq opt 1) 'base-heuristic)
-               (T 'best-heuristic)
-     )))
+      (let ((opt (get-option 0 2)))
+        (ecase opt
+          ('0 (start 0))
+          ('1 'base-heuristic)
+          ('2 'best-heuristic)
+        )
+      )
+   )
 )
 
 (defun get-file-board ()

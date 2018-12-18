@@ -134,13 +134,33 @@
 )
 
 (defun best-heuristic (node)
-"Improved Heuristic that take into count if is possible to make point in the board or not"
-    (- (count-board-pieces (get-node-state node)) (count-board-pieces (get-node-state (get-node-root-parent node))))
+"Improved Heuristic that take the number of pieces left in all possibilities minus eight times the parent root board giving the best board taking out pieces"
+    (- (number-points node) (* 8 (count-board-pieces (get-node-state (get-node-root-parent node)))))
 )
 
-(defun number-spaces-occupied(board)
-"Devolve o numero de espacos ocupados num tabuleiro"
-  (apply '+ (mapcar #'(lambda(row) (number-spaces-occupied-row row)) board))
+(defun number-spaces-occupied (board)
+"Return the number os spaces where are pieces left"
+    (apply '+ (mapcar #'(lambda(row) (number-spaces-occupied-row row)) board))
+)
+
+(defun number-points (node)
+"Return the number of points that can be made on the current board"
+    (let ((board (get-node-state node)))
+        (+
+        (count-board-pieces (make-play 0 0 board))
+        (count-board-pieces (make-play 0 1 board))
+        (count-board-pieces (make-play 0 2 board))
+        (count-board-pieces (make-play 0 3 board))
+        (count-board-pieces (make-play 0 4 board))
+        (count-board-pieces (make-play 0 5 board))
+        (count-board-pieces (make-play 1 0 board))
+        (count-board-pieces (make-play 1 1 board))
+        (count-board-pieces (make-play 1 2 board))
+        (count-board-pieces (make-play 1 3 board))
+        (count-board-pieces (make-play 1 4 board))
+        (count-board-pieces (make-play 1 5 board))
+        )
+    )
 )
 
 (defun number-spaces-occupied-row(row)
