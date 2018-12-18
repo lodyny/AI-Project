@@ -44,19 +44,19 @@
           (ecase opt
             (1
               (let ((solution (list (current-time) (bfs node) (current-time) board)))
-                (progn (write-statistics solution 'BFS) solution))          
+                (progn (write-statistics solution 'BFS) (print-list-boards (first (second solution)))))          
             )
             (2
               (let* ((depth (get-depth)) (solution (list (current-time) (dfs node depth) (current-time) board depth)))
-                (progn (write-statistics solution 'DFS) solution))
+                (progn (write-statistics solution 'DFS) (print-list-boards (first (second solution)))))
             )
             (3
               (let* ((heuristic (get-heuristic)) (solution (list (current-time) (A* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board)))
-                (progn (write-statistics solution 'A*) solution))
+                (progn (write-statistics solution 'A*) (print-list-boards (first (second solution)))))
             )
             (4
               (let* ((heuristic (get-heuristic)) (solution (list (current-time) (IDA* 'expand-node-a* heuristic (list (change-position-value (car node) '3 (funcall heuristic (car node))))) (current-time) board)))
-                (progn (write-statistics solution 'IDA*) solution))
+                (progn (write-statistics solution 'IDA*) (print-list-boards (first (second solution)))))
             )
           )
         )

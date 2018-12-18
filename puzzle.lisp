@@ -25,6 +25,14 @@
    (not (null (mapcar #'(lambda(l) (format stream "~%~C ~a" #\tab l)) board)))
 )
 
+(defun print-list-boards (list-boards)
+"Print a list with boards"
+    (cond
+        ((null list-boards) nil)
+        (t (print-board (first list-boards)) (format t "~%") (print-list-boards (rest list-boards)))
+    )
+)
+
 (defun value-of (line column board)
 "Return the value on position (line/column) of the received board"
     (nth column (nth line board))
