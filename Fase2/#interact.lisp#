@@ -1,0 +1,115 @@
+;; Main file used to start the program and load the other files
+;; Developed by Cesar Nero and David Afonso
+;; Artificial Intelligence - IPS 2018/2019
+
+;; Play:   HUMAN = 1   |   MACHINE = 2
+(defun play-hvc (time-limit max-depth player &optional (current-node (construct-node (initial-board) NIL (initial-player-board) (initial-player-board) NIL)))
+    (format t "Tempo limite: ~S~%" time-limit)
+    (format t "Tempo limite: ~S~%" max-depth)
+    (format t "Tempo limite: ~S~%" player)
+    (format t "Tempo limite: ~S~%" current-node)
+)
+
+
+(defun start-hvc ()
+    (let* 
+        (
+            (first-player (get-option 0 2 "Primeiro a comecar? (1=Jogador / 2=Computador)"))
+            (max-depth (get-option 1 9999999 "Profundidade maxima?"))
+            (pc-time (get-option 1000 5000 "Quanto tempo para o computador pensar em ms? (1000-5000)"))
+        )
+        (progn 
+            ;(write-first-log)
+            (play-hvc pc-time max-depth first-player)
+        )
+    )
+)
+
+(defun start (&optional (loadfiles 1))
+  (if (= loadfiles 1) (load-files)) 
+  (display-menu)
+  (let ((opt (get-option 0 1)))
+    (ecase opt
+      ('0 (display-farewell))
+      ('1 (start-hvc))
+    )
+  )
+)
+
+(defun display-menu ()
+"Display to the user the main menu"
+    (format t "~%~C+------------------------------+" #\tab)
+    (format t "~%~C|                              |" #\tab)
+    (format t "~%~C|  Bem-vindo(a) ao Adji-boto!  |" #\tab)
+    (format t "~%~C|                              |" #\tab)
+    (format t "~%~C| 0 - Sair                     |" #\tab)
+    (format t "~%~C| 1 - Humano vs Computador     |" #\tab)
+    (format t "~%~C| 2 - Computador vs Computador |" #\tab)
+    (format t "~%~C|                              |" #\tab)
+    (format t "~%~C+------------------------------+" #\tab)
+)
+
+(defun display-farewell ()
+"Display to the user a goodbye message"
+  (format t "~%~CGoodbye!" #\tab)
+)
+
+(defun option-text ()
+"Ask the user for some input"
+  (format t "~%~COpcao: " #\tab)
+  (read)
+)
+
+(defun option-invalid-text ()
+"Display to the user that the option was invalid"
+  (progn
+    (format t "~COps, opcao invalida!" #\tab)
+   )
+)
+
+(defun current-time()
+"Return the current time on the format of hh:mm:ss"
+  (multiple-value-bind (s m h) (get-decoded-time) (list h m s))
+)
+
+(defun get-option (min max &optional text)
+"Ask the user for some input between the range received (min~max)"
+  (if (> (length text) 0) (format t "~%~C~S" #\tab text))
+  (let ((opt (option-text)))
+    (cond ((not (numberp opt)) (progn (option-invalid-text) (get-option min max)))
+          ((or (> opt max) (< opt min)) (progn (option-invalid-text) (get-option min max)))
+          (t opt))
+  )
+)
+
+(defun load-files ()
+"Load the projects files needed to the correct function of the program"
+  ;(format t "A iniciar processo de carregamento de ficheiros...")
+  ;(compile-file (get-default-path 'puzzle 'lisp) :load t)
+  ;(compile-file (get-default-path 'procura 'lisp) :load t)
+ ; (format t "Carregamento terminado com sucesso, a iniciar jogo...~%")
+    (format t "done loading files")
+)
+
+
+
+
+;; AUXILIAR A MOVER
+(defun initial-board (&optional (linhas 2) (colunas 6))
+"Return an empty board"
+    (make-list linhas :initial-element (make-list colunas :initial-element '8))
+)
+
+(defun initial-player-board ()
+    '(8 8 8 8 8 8)
+)
+
+(defun construct-node (board parent pieces-p1 pieces-p2 playNode &optional (f 0))
+"Build a node"
+  (list board parent f (list 'P1 pieces-p1) (list 'P2 pieces-p2) playNode)
+)
+
+(defun pieces(&optional (ssv 10) (bsv 10) (cv 15))
+"Cria a estrutura de dados das pecas do problema (por defeito (10 10 15))"
+  (list ssv bsv cv)
+)
