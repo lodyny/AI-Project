@@ -58,8 +58,24 @@
                 )
 
                 (let* ((solution-node (negamax current-node time-limit 1 1 max-depth))
+                       (aux-node (car solution-node))
+                       (play (get-play aux-node))
                       )
+                      (if (null play)
+                        (progn
+                          (format t "~%COMPUTADOR SEM JOGADAS POSSIVEIS...~%")
+                          (play-hvc time-limit max-depth 1 current-node)
+                        )
+                        (let* (
+                                (new-board (make-play 0 0 current-board))
+                                (new-pieces (second new-board))
+                                (new-pieces-m (first new-board))
+                              )
                       (format t "~%~%SOLUC NEGAMAX PC:~%~S" solution-node)
+                      (play-hvc time-limit max-depth 1 (construct-node new-board NIL new-pieces new-pieces-m play))
+                        )
+                      )
+
                 )
             )
             ;; MAQUINA A JOGAR
@@ -523,8 +539,6 @@
 
 (defun eval-node (node player)
 "Project Heuristic (Number of pieces on board - Number of pieces to capture on board)"
-    (format t "EVAL NODE")
-    (format t "NODE: ~S" (first node))
     (- (count-board-pieces (get-node-state node)) (count-board-pieces (get-node-state (get-node-root-parent node))))
 )
 
@@ -533,4 +547,33 @@
   (cond
     ((null (get-node-parent node)) node)
     (t (get-node-root-parent (get-node-parent node))))
+)
+
+(defun get-node-parent (node)
+"Return the parent of the node"
+	(second node)
+)
+
+(defun create-solution-node(play-node analised-nodes cuts-number start-time)
+"Constr�i o n� solu��o"
+  (list play-node (list analised-nodes cuts-number (get-time-spent start-time)))
+)
+
+(defun get-time-spent(start-time)
+"Retorna a diferen�a temporal"
+  (- (get-universal-time) start-time)
+)
+
+(defun get-play(node)
+"Retorna a jogada de um n�"
+  (let ((parent (get-node-parent node)))
+    (cond
+     ((null (get-node-parent parent))  (get-play-node node))
+     (T (get-play parent))
+     )
+    )
+)
+
+(defun get-play-node(node)
+  (nth 5 node)
 )
