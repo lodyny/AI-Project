@@ -79,7 +79,7 @@
               (and (or (null machine-board) (= (length machine-board) 0)) 
                   (or (null human-board) (= (length human-board) 0))) 
               (and (= machine-plays 0) (= human-plays 0)))
-            (write-end-log current-node))
+            (write-end-log current-node 0))
           ((= player 0)
             ;; <MAQUINA A JOGAR>
               (format t "~%~%~C Ronda da maquina~%" #\tab)
@@ -164,7 +164,7 @@
         
         (cond
         ((or (and (or (null machine1-board) (= (length machine1-board) 0)) (or (null machine2-board) (= (length machine2-board) 0))) (and (= machine1-plays 0) (= machine2-plays 0)))
-            (write-end-log current-node))
+            (write-end-log current-node 1))
           ((= player 0)
             ;; <MAQUINA 1 A JOGAR>
               (format t "~%~%~C Ronda da maquina 1~%" #\tab)
@@ -318,21 +318,30 @@
   )   
 )
 
-(defun write-end-log (current-node)
+(defun write-end-log (current-node game-type)
   (progn
        (with-open-file (file (get-default-path 'log 'dat) :direction :output :if-exists :append :if-does-not-exist :create)
-            (end-game file current-node))
-       (end-game t current-node)
+            (end-game file current-node game-type))
+       (end-game t current-node game-type)
   )
 ) 
 
-(defun end-game (stream current-node)
+(defun end-game (stream current-node game-type)
   (let ((machine-cap (get-node-captured current-node 0))
         (human-cap (get-node-captured current-node 1)))
+    (if (= game-type 0)
     (cond 
       ((> human-cap machine-cap) (format stream "~%~%~C Humano ganhou o jogo com ~S pecas capturadas contra ~S da maquina!~%" #\tab human-cap machine-cap))
       ((> machine-cap human-cap) (format stream "~%~%~C Maquina ganhou o jogo com ~S pecas capturadas contra ~S do humano!~%" #\tab machine-cap human-cap))
       (t (format stream "~%~%~C Houve um empate entre maquina e humano, ambos com ~S pecas capturadas!~%" #\tab human-cap))
+    )
+    )
+    (if (= game-type 1)
+    (cond 
+      ((> human-cap machine-cap) (format stream "~%~%~C Maquina2 ganhou o jogo com ~S pecas capturadas contra ~S da maquina1!~%" #\tab human-cap machine-cap))
+      ((> machine-cap human-cap) (format stream "~%~%~C Maquina1 ganhou o jogo com ~S pecas capturadas contra ~S da maquina2!~%" #\tab machine-cap human-cap))
+      (t (format stream "~%~%~C Houve um empate entre maquina1 e maquina2, ambos com ~S pecas capturadas!~%" #\tab human-cap))
+    )
     )
     (format stream "~%~%~C----------------- FIM JOGO -----------------~%" #\tab)
   )
