@@ -34,23 +34,24 @@
         (format t "~%~C Maquina ~C ~S ~C     ~S" #\tab #\tab (first current-board) #\tab machine-cap)
         (format t "~%~C Humano ~C ~S ~C     ~S" #\tab #\tab (second current-board) #\tab human-cap)
         (format t "~%~C--------------------------------------------" #\tab)
+        ;(format t "Peças no Tabuleiro:  ~S/~S~%" (count-board-pieces human-board) (count-board-pieces machine-board))
+        ;(format t "Jogadas possiveis computador: ~S - ~S jogadas possiveis~%" machine-board machine-plays)
+        ;(format t "Jogadas possiveis jogador: ~S - ~S jogadas possiveis~%" human-board human-plays)     
+
         (cond
-        ((or  
-              (and (or (null machine-board) (= (length machine-board) 0)) 
-                  (or (null human-board) (= (length human-board) 0))) 
-              (and (= machine-plays 0) (= human-plays 0)))
+        ((or (and (or (null machine-board) (= (length machine-board) 0)) (or (null human-board) (= (length human-board) 0))) (and (= machine-plays 0) (= human-plays 0)))
             (write-end-log current-node))
           ((= player 0)
-            ;; <MAQUINA A JOGAR>
+            ;; MAQUINA A JOGAR
               (format t "~%~%~C Ronda da maquina~%" #\tab)
               (if (or (= machine-plays 0) (null machine-board))
                 (progn
                   (format t "~%~C Maquina sem jogadas possiveis...~%" #\tab)
                   (play-hvc time-limit max-depth 1 current-node))
 
-                ;; <CALCULAR SOLUCAO>
+                ;; CALCULAR SOLUCAO
                   (let* ((solution-node (negamax current-node time-limit player max-depth))
-                        (aux-node (first solution-node))
+                        (aux-node (car solution-node))
                         (play (get-play aux-node)))
                     (if (null play)
                       (progn
@@ -71,33 +72,31 @@
                       )
                     )
                   )
-                ;; <CALCULAR SOLUCAO/>
+                ;; CALCULAR SOLUCAO
               )
-            ;; <MAQUINA A JOGAR/>
+            ;; MAQUINA A JOGAR
             )
           (T
-            ;; <JOGADOR A JOGAR>
-          (format t "~%~%~C Ronda do humano~%" #\tab)
+            ;; JOGADOR A JOGAR
+            (format t "~%~%~C Ronda do humano~%" #\tab)
            (if (or (= human-plays 0) (null human-board))
                  (progn
                    (format t "~%~C Humano sem jogadas possiveis....~%" #\tab)
                    (play-hvc time-limit max-depth 0 current-node)
                   )             
-              (let* (
+             (let* (
                     (position (get-option 1 6 "Qual a posicao que quer jogar (1-6)?"))
                     (new-board (make-play player (- position 1) current-board))
                     (new-pieces (last new-board))
                     (new-pieces-m (first new-board))
                     ) 
-                (progn
-                  (print-board new-board)
-                  (play-hvc time-limit max-depth 0 
-                    (construct-node new-board NIL new-pieces new-pieces-m position 0 machine-cap
-                      (+ human-cap (count-board-dif current-board new-board))))
-                )
-              )        
-            )
-            ;; <JOGADOR A JOGAR/>
+               (progn
+                 (print-board new-board)
+                 (play-hvc time-limit max-depth 0 (construct-node new-board NIL new-pieces new-pieces-m position 0 machine-cap (+ human-cap (count-board-dif current-board new-board))))
+                 )
+               )        
+          )
+            ;; JOGADOR A JOGAR
           )
         )
       )
@@ -126,16 +125,16 @@
         ((or (and (or (null machine1-board) (= (length machine1-board) 0)) (or (null machine2-board) (= (length machine2-board) 0))) (and (= machine1-plays 0) (= machine2-plays 0)))
             (write-end-log current-node))
           ((= player 0)
-            ;; <MAQUINA 1 A JOGAR>
+            ;; MAQUINA 1 A JOGAR
               (format t "~%~%~C Ronda da maquina 1~%" #\tab)
               (if (or (= machine1-plays 0) (null machine1-board))
                 (progn
                   (format t "~%~C Maquina 1 sem jogadas possiveis...~%" #\tab)
                   (play-cvc time-limit max-depth 1 current-node))
 
-                ;; <CALCULAR SOLUCAO>
+                ;; CALCULAR SOLUCAO
                   (let* ((solution-node (negamax current-node time-limit player max-depth))
-                        (aux-node (first solution-node))
+                        (aux-node (car solution-node))
                         (play (get-play aux-node)))
                     (if (null play)
                       (progn
@@ -146,8 +145,7 @@
                       (let* (
                             (new-machine1-board (first play))
                             (new-machine2-board (last play))
-                            (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 
-                              (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
+                            (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
                             )
 
                             (progn
@@ -157,21 +155,21 @@
                       )
                     )
                   )
-                ;; <CALCULAR SOLUCAO/>
+                ;; CALCULAR SOLUCAO
               )
-            ;; <MAQUINA 1 A JOGAR/>
+            ;; MAQUINA 1 A JOGAR
             )
           (T
-              ;; <MAQUINA 2 A JOGAR>
+              ;; MAQUINA 2 A JOGAR
               (format t "~%~%~C Ronda da maquina 2~%" #\tab)
               (if (or (= machine2-plays 0) (null machine2-board))
                 (progn
                   (format t "~%~C Maquina 2 sem jogadas possiveis...~%" #\tab)
                   (play-cvc time-limit max-depth 0 current-node))
 
-                ;; <CALCULAR SOLUCAO>
+                ;; CALCULAR SOLUCAO
                   (let* ((solution-node (negamax current-node time-limit player max-depth))
-                        (aux-node (first solution-node))
+                        (aux-node (car solution-node))
                         (play (get-play aux-node)))
                     (if (null play)
                       (progn
@@ -182,8 +180,7 @@
                       (let* (
                             (new-machine1-board (first play))
                             (new-machine2-board (last play))
-                            (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 
-                              (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
+                            (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
                             )
 
                             (progn
@@ -193,9 +190,9 @@
                       )
                     )
                   )
-                ;; <CALCULAR SOLUCAO/>
+                ;; CALCULAR SOLUCAO
               )
-            ;; <MAQUINA 2 A JOGAR/>
+            ;; MAQUINA 2 A JOGAR
           )
         )
       )
@@ -342,10 +339,10 @@
 "Attach parent node"
   (if (equal (member (first node) (list (make-play line column (first node))) :test 'equal) nil)
     (construct-node (make-play line column (first node)) node
-      (get-node-pieces (make-play line column (first node)) 1)
-      (get-node-pieces (make-play line column (first node)) 2)
-      (make-play line column (first node))
-    )
+     (get-node-pieces (make-play line column (first node)) 1)
+     (get-node-pieces (make-play line column (first node)) 2)
+     (make-play line column (first node))
+     )
   )
 )
 
@@ -358,26 +355,12 @@
         (t 
             (cond
                 ((= 0 (- npieces 1)) 
-                    (check-point line column 
-                      (make-play 
-                        (first (next-position line column)) 
-                        (first (last (next-position line column)))
-                        (replace-position line column board (1+ (value-of line column board))) 
-                        (- npieces 1) 
-                        0 
-                        fline
-                      ) 
-                    fline)
+                    (check-point line column (make-play (first (next-position line column)) (first (last (next-position line column)))
+                    (replace-position line column board (1+ (value-of line column board))) (- npieces 1) 0 fline) fline)
                 )
                 (t 
-                    (make-play (
-                      first (next-position line column)) 
-                      (first (last (next-position line column)))
-                      (replace-position line column board (1+ (value-of line column board)))
-                      (- npieces 1)
-                      0 
-                      fline
-                    )
+                    (make-play (first (next-position line column)) (first (last (next-position line column)))
+                    (replace-position line column board (1+ (value-of line column board))) (- npieces 1) 0 fline)
                 )
             )
         )
@@ -396,8 +379,8 @@
 
 (defun replace-at (column board &optional (value 0))
 "Replace the value inside only one line"
-  (cond ((zerop column)  (append (list value) (rest board)))
-        (t (cons (first board) (replace-at (- column 1) (rest board) value)))
+  (cond ((zerop column)  (append (list value) (cdr board)))
+        (t (cons (car board) (replace-at (- column 1) (cdr board) value)))
    )
 )
 
@@ -435,9 +418,7 @@
 "Check if there is point on the received board, line and column"
     (let ((value (value-of line column board)))
         (cond
-            ((and (/= line original-line)  
-                  (or (= 1 value) (= 3 value) (= 5 value))) 
-                    (replace-position line column board))
+            ((and (/= line original-line) (or (= 1 value) (= 3 value) (= 5 value))) (replace-position line column board))
             (t board)
         )
     )
@@ -452,8 +433,8 @@
 "Cuts the sub-lists and make a one giant list"
     (cond
         ((equal list nil) nil)
-        ((atom (first list)) (cons (first list) (single-list (rest list))))
-        ((listp (first list)) (append (first list) (single-list (rest list))))
+        ((atom (car list)) (cons (car list) (single-list (cdr list))))
+        ((listp (car list)) (append (car list) (single-list (cdr list))))
     )
 )
 
@@ -465,8 +446,8 @@
 (defun get-node-pieces(node player)
 "Devolve a estrutura de dados das pecas de um no"
     (if (= player 0)
-	      (second (nth 3 node))
-        (second (nth 4 node))
+	      (cadr (nth 3 node))
+        (cadr (nth 4 node))
      )
 )
 
@@ -486,47 +467,40 @@
 
 ;; NEGAMAX
 (defun negamax(
-                node 
-                time-limit                 
-                &optional 
-                (playing 0)
-                (max-depth 50)
-                (p-alpha most-negative-fixnum) 
-                (p-beta most-positive-fixnum) 
-                (start-time (get-universal-time))
-                (checked-nodes 1)
-                (cuts-number 0)
+               node 
+               time-limit                 
+               &optional 
+               (playing 0)
+               (max-depth 50)
+               (p-alpha most-negative-fixnum) 
+               (p-beta most-positive-fixnum) 
+               (start-time (get-universal-time))
+               (analised-nodes 1)
+               (cuts-number 0)
                )
 "Executa a funï¿½ï¿½o negamax para um nï¿½"
   (let*  ((expanded-list (order-negamax (funcall 'expand-node node playing)))
           (time-spent (- (get-universal-time) start-time)))
     (cond
      ((or (= max-depth 0) (= (length expanded-list) 0) (>= time-spent time-limit))
-      (create-solution-node 
-        (change-position-value node 2 (* 1 (funcall 'eval-node node)))
-        checked-nodes
-        cuts-number
-        start-time
-        ) 
-      )
+      (create-solution-node (change-position-value node 2 (* 1 (funcall 'eval-node node))) analised-nodes cuts-number start-time))
      (T 
-      (negamax-children 
-        node
-        expanded-list
-        time-limit
-        playing
-        max-depth
-        p-alpha
-        p-beta
-        start-time
-        checked-nodes
-        cuts-number  
+      (negamax-suc 
+       node
+       expanded-list
+       time-limit
+       playing
+       max-depth
+       p-alpha
+       p-beta
+       start-time
+       analised-nodes
+       cuts-number  
        )  
       )
+     )
     )
   )
-)
-
 
   (defun order-negamax (node-list)
 "Ordena uma lista executando o algoritmo quicksort"
@@ -537,43 +511,48 @@
            (cons (first node-list) nil)
            (order-negamax (list< (get-node-f (first node-list)) (rest node-list)))
            )
+          ;(append
+          ; (order-negamax (list< (get-node-f (first node-list)) (rest node-list)))
+          ; (cons (first node-list) nil)          
+          ; (order-negamax (list>= (get-node-f (first node-list)) (rest node-list)))
+           ;)
   )
 )
 
-(defun negamax-children(
-                          parent-node
-                          expanded-list
-                          time-limit                 
-                          playing
-                          max-depth
-                          p-alpha
-                          p-beta
-                          start-time
-                          checked-nodes
-                          cuts-number
-                        )
+(defun negamax-suc(
+                   parent-node
+                   expanded-list
+                   time-limit                 
+                   playing
+                   max-depth
+                   p-alpha
+                   p-beta
+                   start-time
+                   analised-nodes
+                   cuts-number
+                   )
   (cond
    ((= (length expanded-list) 1)
    (if (= 0 playing)
-   (negamax (invert-node-sign (first expanded-list))
+   (negamax (invert-node-sign (car expanded-list))
              time-limit
              1
              (1- max-depth)
              (- p-beta)
              (- p-alpha)
              start-time
-             (1+ checked-nodes)
+             (1+ analised-nodes)
              cuts-number
              )
 
-            (negamax (invert-node-sign (first expanded-list))
+            (negamax (invert-node-sign (car expanded-list))
              time-limit
              0
              (1- max-depth)
              (- p-beta)
              (- p-alpha)
              start-time
-             (1+ checked-nodes)
+             (1+ analised-nodes)
              cuts-number
              )
    ) 
@@ -581,81 +560,73 @@
     )
    (T
     (if (= 0 playing)
-    (let*  ((car-solution 
-              (negamax  
-                (invert-node-sign (first expanded-list))
-                time-limit
-                1
-                (1- max-depth)
-                (- p-beta)
-                (- p-alpha)
-                start-time
-                (1+ checked-nodes)
-                cuts-number
-              )
-            )
-            (car-node (first car-solution))
+    (let*  ((car-solution (negamax (invert-node-sign (car expanded-list))
+                                   time-limit
+                                   1
+                                   (1- max-depth)
+                                   (- p-beta)
+                                   (- p-alpha)
+                                   start-time
+                                   (1+ analised-nodes)
+                                   cuts-number
+                                   ))
+            (car-node (car car-solution))
             (best-value (max-node-f car-node parent-node))
             (alpha (max p-alpha (get-node-f best-value)))
-            (first-checked-nodes (get-solution-checked-nodes (second car-solution)))       
-            (car-cuts (get-solution-cuts (second car-solution)))
+            (car-analised-nodes (get-solution-analised-nodes (cadr car-solution)))       
+            (car-cuts (get-solution-cuts (cadr car-solution)))
             )
 
       (if (>= alpha p-beta)
-          ;;<corte>
-          (progn (create-solution-node 
-                    parent-node 
-                    first-checked-nodes 
-                    (1+ car-cuts) 
-                    start-time)
-                  )
+          ;;corte
+          (progn (create-solution-node parent-node car-analised-nodes (1+ car-cuts) start-time))
 
-          ;; <corte/>
-        (negamax-children parent-node
-                     (rest expanded-list)
+        ;;nï¿½o corte
+        (negamax-suc parent-node
+                     (cdr expanded-list)
                      time-limit
                      playing
                      max-depth
                      alpha
                      p-beta
                      start-time
-                     first-checked-nodes
+                     car-analised-nodes
                      car-cuts
                      )
         )
       )
 
-      (let*  ((car-solution (negamax (invert-node-sign (first expanded-list))
+      (let*  ((car-solution (negamax (invert-node-sign (car expanded-list))
                                    time-limit
                                    0
                                    (1- max-depth)
                                    (- p-beta)
                                    (- p-alpha)
                                    start-time
-                                   (1+ checked-nodes)
+                                   (1+ analised-nodes)
                                    cuts-number
                                    ))
-            (car-node (first car-solution))
+            (car-node (car car-solution))
             (best-value (max-node-f car-node parent-node))
             (alpha (max p-alpha (get-node-f best-value)))
-            (first-checked-nodes (get-solution-checked-nodes (second car-solution)))       
-            (car-cuts (get-solution-cuts (second car-solution)))
+            (car-analised-nodes (get-solution-analised-nodes (cadr car-solution)))       
+            (car-cuts (get-solution-cuts (cadr car-solution)))
             )
 
       (if (>= alpha p-beta)
           ;;corte
-          (progn (create-solution-node parent-node first-checked-nodes (1+ car-cuts) start-time))
+          (progn (create-solution-node parent-node car-analised-nodes (1+ car-cuts) start-time))
 
         ;;nï¿½o corte
-        (negamax-children parent-node
-                     (rest expanded-list)
+        (negamax-suc parent-node
+                     (cdr expanded-list)
                      time-limit
                      playing
                      max-depth
                      alpha
                      p-beta
                      start-time
-                     first-checked-nodes
+                     car-analised-nodes
                      car-cuts
                      )
         )
@@ -710,7 +681,7 @@
   (nth 2 solution-node)
 )
 
-(defun get-solution-checked-nodes(solution-node)
+(defun get-solution-analised-nodes(solution-node)
 "Retorna a soluï¿½ï¿½o do nï¿½"
   (nth 0 solution-node)
 )
@@ -730,8 +701,8 @@
 (defun change-position-value(list position value)
   "Muda o ï¿½tomo numa certa posiï¿½ï¿½oput de uma lista para um valor recebido e retorna a nova lista"
   (cond 
-   ((= position 0) (cons value (rest list)))
-   (T (cons (first list) (change-position-value (rest list) (1- position) value)))
+   ((= position 0) (cons value (cdr list)))
+   (T (cons (car list) (change-position-value (cdr list) (1- position) value)))
    )
 )
 
@@ -749,12 +720,12 @@
 
 (defun get-node-parent (node)
 "Return the parent of the node"
-	(second node)
+	(cadr node)
 )
 
-(defun create-solution-node (play-node checked-nodes cuts-number start-time)
+(defun create-solution-node (play-node analised-nodes cuts-number start-time)
 "Constrï¿½i o nï¿½ soluï¿½ï¿½o"
-  (list play-node (list checked-nodes cuts-number (get-time-spent start-time)))
+  (list play-node (list analised-nodes cuts-number (get-time-spent start-time)))
 )
 
 (defun get-time-spent (start-time)
@@ -784,7 +755,7 @@
 )
 
 (defun write-log (solution-node)
- (let* ((current-node (first solution-node))
+ (let* ((current-node (car solution-node))
          (play (get-play current-node))
          (board (get-node-state current-node)))
     (progn
@@ -798,9 +769,9 @@
 (progn 
     (print-board board stream)
     (format stream "~%~C Jogou na posicao: ~a" #\tab position)
-    (format stream "~%~C Nos analisados: ~a " #\tab (get-solution-checked-nodes (second solution-node)))
-    (format stream "~%~C Numero cortes: ~a " #\tab (get-solution-cuts (second solution-node)))
-    (format stream "~%~C Tempo gasto: ~a " #\tab (get-solution-time-spent (second solution-node)))
+    (format stream "~%~C Nos analisados: ~a " #\tab (get-solution-analised-nodes (cadr solution-node)))
+    (format stream "~%~C Numero cortes: ~a " #\tab (get-solution-cuts (cadr solution-node)))
+    (format stream "~%~C Tempo gasto: ~a " #\tab (get-solution-time-spent (cadr solution-node)))
   )   
 )
 
