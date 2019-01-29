@@ -2,6 +2,20 @@
 ;; Developed by Cesar Nero and David Afonso
 ;; Artificial Intelligence - IPS 2018/2019
 
+(defpackage :p170221080-170221085)
+
+(defun data-directory ()
+  "C:/adjiboto/"
+)
+
+(compile-file (concatenate 'string (data-directory) "jogo.lisp"))
+(compile-file (concatenate 'string (data-directory) "algoritmo.lisp"))
+
+(defun get-default-path (file-name file-type)
+"Return the problems.dat path from the standard path 'C:/lisp/problems.dat'"
+  (make-pathname :host "c" :directory '(:absolute "adjiboto") :name (string file-name) :type (string file-type))
+)
+
 ;; Play:   HUMAN = 1   |   MACHINE = 0
 (defun play-hvc (time-limit max-depth player &optional (current-node (construct-node (initial-board) NIL (initial-player-board) (initial-player-board) NIL)))
     (let ((current-board (get-node-state current-node)))
@@ -14,19 +28,19 @@
           (human-plays (length (expand-node current-node 1)))
           (human-cap (get-node-captured current-node 1))
         )
+
         (format t "~%~C--------------------------------------------" #\tab)
         (format t "~%~C Jogador ~C   Tabuleiro ~C Capturadas" #\tab #\tab #\tab)
         (format t "~%~C Maquina ~C ~S ~C     ~S" #\tab #\tab (first current-board) #\tab machine-cap)
         (format t "~%~C Humano ~C ~S ~C     ~S" #\tab #\tab (second current-board) #\tab human-cap)
         (format t "~%~C--------------------------------------------" #\tab)
         ;(format t "Peças no Tabuleiro:  ~S/~S~%" (count-board-pieces human-board) (count-board-pieces machine-board))
-
         ;(format t "Jogadas possiveis computador: ~S - ~S jogadas possiveis~%" machine-board machine-plays)
         ;(format t "Jogadas possiveis jogador: ~S - ~S jogadas possiveis~%" human-board human-plays)     
 
         (cond
         ((or (and (or (null machine-board) (= (length machine-board) 0)) (or (null human-board) (= (length human-board) 0))) (and (= machine-plays 0) (= human-plays 0)))
-            (end-game current-node))
+            (write-end-log current-node))
           ((= player 0)
             ;; MAQUINA A JOGAR
               (format t "~%~%~C Ronda da maquina~%" #\tab)
@@ -48,10 +62,13 @@
                       (let* (
                             (new-machine-board (first play))
                             (new-human-board (last play))
-                            (new-board (construct-node play NIL new-human-board new-machine-board play human-cap (+ machine-cap (count-board-dif current-board play))))
+                            (new-board (construct-node play NIL new-human-board new-machine-board 0 0 (+ machine-cap (count-board-dif current-board play)) human-cap))
                             )
 
-                            (play-hvc time-limit max-depth 1 new-board)
+                            (progn
+                              (write-log solution-node)
+                              (play-hvc time-limit max-depth 1 new-board)
+                            )
                       )
                     )
                   )
@@ -75,11 +92,107 @@
                     ) 
                (progn
                  (print-board new-board)
-                 (play-hvc time-limit max-depth 0 (construct-node new-board NIL new-pieces new-pieces-m position (+ human-cap (count-board-dif current-board new-board)) machine-cap));;1 para testar
+                 (play-hvc time-limit max-depth 0 (construct-node new-board NIL new-pieces new-pieces-m position 0 machine-cap (+ human-cap (count-board-dif current-board new-board))))
                  )
                )        
           )
             ;; JOGADOR A JOGAR
+          )
+        )
+      )
+    )
+)
+
+(defun play-cvc (time-limit max-depth player &optional (current-node (construct-node (initial-board) NIL (initial-player-board) (initial-player-board) NIL)))
+    (let ((current-board (get-node-state current-node)))
+      (let*
+        (
+          (machine1-board (get-node-pieces current-node 0))
+          (machine1-plays (length (expand-node current-node 0)))
+          (machine1-cap (get-node-captured current-node 0))
+          (machine2-board (get-node-pieces current-node 1))
+          (machine2-plays (length (expand-node current-node 1)))
+          (machine2-cap (get-node-captured current-node 1))
+        )
+
+        (format t "~%~C--------------------------------------------" #\tab)
+        (format t "~%~C Jogador ~C   Tabuleiro ~C Capturadas" #\tab #\tab #\tab)
+        (format t "~%~C Maquina1 ~C ~S ~C     ~S" #\tab #\tab (first current-board) #\tab machine1-cap)
+        (format t "~%~C Maquina2 ~C ~S ~C     ~S" #\tab #\tab (second current-board) #\tab machine2-cap)
+        (format t "~%~C--------------------------------------------" #\tab)
+        
+        (cond
+        ((or (and (or (null machine1-board) (= (length machine1-board) 0)) (or (null machine2-board) (= (length machine2-board) 0))) (and (= machine1-plays 0) (= machine2-plays 0)))
+            (write-end-log current-node))
+          ((= player 0)
+            ;; MAQUINA 1 A JOGAR
+              (format t "~%~%~C Ronda da maquina 1~%" #\tab)
+              (if (or (= machine1-plays 0) (null machine1-board))
+                (progn
+                  (format t "~%~C Maquina 1 sem jogadas possiveis...~%" #\tab)
+                  (play-cvc time-limit max-depth 1 current-node))
+
+                ;; CALCULAR SOLUCAO
+                  (let* ((solution-node (negamax current-node time-limit player max-depth))
+                        (aux-node (car solution-node))
+                        (play (get-play aux-node)))
+                    (if (null play)
+                      (progn
+                        (format t "~%~C Maquina 1 sem jogadas possiveis...~%" #\tab)
+                        (play-cvc time-limit max-depth 1 current-node)
+                      )
+
+                      (let* (
+                            (new-machine1-board (first play))
+                            (new-machine2-board (last play))
+                            (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
+                            )
+
+                            (progn
+                              (write-log solution-node)
+                              (play-cvc time-limit max-depth 1 new-board)
+                            )
+                      )
+                    )
+                  )
+                ;; CALCULAR SOLUCAO
+              )
+            ;; MAQUINA 1 A JOGAR
+            )
+          (T
+              ;; MAQUINA 2 A JOGAR
+              (format t "~%~%~C Ronda da maquina 2~%" #\tab)
+              (if (or (= machine2-plays 0) (null machine2-board))
+                (progn
+                  (format t "~%~C Maquina 2 sem jogadas possiveis...~%" #\tab)
+                  (play-cvc time-limit max-depth 0 current-node))
+
+                ;; CALCULAR SOLUCAO
+                  (let* ((solution-node (negamax current-node time-limit player max-depth))
+                        (aux-node (car solution-node))
+                        (play (get-play aux-node)))
+                    (if (null play)
+                      (progn
+                        (format t "~%~C Maquina 2 sem jogadas possiveis...~%" #\tab)
+                        (play-cvc time-limit max-depth 0 current-node)
+                      )
+
+                      (let* (
+                            (new-machine1-board (first play))
+                            (new-machine2-board (last play))
+                            (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
+                            )
+
+                            (progn
+                              (write-log solution-node)
+                              (play-cvc time-limit max-depth 0 new-board)
+                            )
+                      )
+                    )
+                  )
+                ;; CALCULAR SOLUCAO
+              )
+            ;; MAQUINA 2 A JOGAR
           )
         )
       )
@@ -91,37 +204,38 @@
     (let* 
         (
             (first-player (get-option 1 2 "Primeiro a comecar? (1=Jogador / 2=Computador)"))
-            (max-depth (get-option 1 9999999 "Profundidade maxima?"))
-            (pc-time (get-option 1 5 "Quanto tempo para o computador pensar em ms? (1000-5000)"))
+            (max-depth (get-option 1 999999999 "Profundidade maxima?"))
+            (pc-time (get-option 1000 5000 "Quanto tempo para o computador pensar em ms? (1000-5000)"))
         )
         (progn 
-            ;(write-first-log)
+            (write-start-log)
             (if (= first-player 2)
-              (play-hvc pc-time max-depth 0)
-              (play-hvc pc-time max-depth 1))
+              (play-hvc (/ pc-time 1000) max-depth 0)
+              (play-hvc (/ pc-time 1000) max-depth 1))
         )
     )
 )
 
-(defun start (&optional (loadfiles 1))
-  (if (= loadfiles 1) (load-files)) 
+(defun start-cvc ()
+    (let* 
+        (
+            (max-depth (get-option 1 999999999 "Profundidade maxima?"))
+            (pc-time (get-option 1000 5000 "Quanto tempo para o computador pensar em ms? (1000-5000)"))
+        )
+        (progn 
+            (write-start-log)
+            (play-cvc (/ pc-time 1000) max-depth 0)
+        )
+    )
+)
+
+(defun start ()
   (display-menu)
-  (let ((opt (get-option 0 1)))
+  (let ((opt (get-option 0 2)))
     (ecase opt
       ('0 (display-farewell))
       ('1 (start-hvc))
-    )
-  )
-)
-
-(defun end-game (current-node)
-  (let ((machine-cap (get-node-captured current-node 0))
-        (human-cap (get-node-captured current-node 1)))
-    (cond 
-      ((> human-cap machine-cap) (format t "~%~%~C Humano ganhou o jogo com ~S pecas capturadas contra ~S da maquina!~%" #\tab human-cap machine-cap))
-      ((> machine-cap human-cap) (format t "~%~%~C Maquina ganhou o jogo com ~S pecas capturadas contra ~S do humano!~%" #\tab machine-cap human-cap))
-      (t (format t "~%~%~C Houve um empate entre maquina e humano, ambos com ~S pecas capturadas!~%" #\tab human-cap))
-    
+      ('2 (start-cvc))
     )
   )
 )
@@ -172,27 +286,15 @@
   )
 )
 
-(defun load-files ()
-"Load the projects files needed to the correct function of the program"
-  ;(format t "A iniciar processo de carregamento de ficheiros...")
-  ;(compile-file (get-default-path 'puzzle 'lisp) :load t)
-  ;(compile-file (get-default-path 'procura 'lisp) :load t)
- ; (format t "Carregamento terminado com sucesso, a iniciar jogo...~%")
-    (format t "done loading files")
-)
-
-
-
-
 ; AUXILIAR A MOVER
 (defun initial-board (&optional (linhas 2) (colunas 6))
 "Return an empty board"
-    (make-list linhas :initial-element (make-list colunas :initial-element '1))
+    (make-list linhas :initial-element (make-list colunas :initial-element '2))
 )
 
 
 (defun initial-player-board ()
-    '(1 1 1 1 1 1)
+    '(2 2 2 2 2 2)
 )
 
 (defun construct-node (board parent pieces-p1 pieces-p2 playNode &optional (f 0) (captured-p1 0) (captured-p2 0))
@@ -284,7 +386,7 @@
 
 (defun value-of (line column board)
 "Return the value on position (line/column) of the received board"
-    (nth column (nth line board))
+  (nth column (nth line board))
 )
 
 (defun next-position (line column)
@@ -343,7 +445,7 @@
 
 (defun get-node-pieces(node player)
 "Devolve a estrutura de dados das pecas de um no"
-    (if (= player 1)
+    (if (= player 0)
 	      (cadr (nth 3 node))
         (cadr (nth 4 node))
      )
@@ -380,7 +482,7 @@
   (let*  ((expanded-list (order-negamax (funcall 'expand-node node playing)))
           (time-spent (- (get-universal-time) start-time)))
     (cond
-     ((or (= max-depth 0) (= (length expanded-list) 0) (>= time-spent time-limit)) ;;se for no folha OU tempo excedido OU profundidade maxima
+     ((or (= max-depth 0) (= (length expanded-list) 0) (>= time-spent time-limit))
       (create-solution-node (change-position-value node 2 (* 1 (funcall 'eval-node node))) analised-nodes cuts-number start-time))
      (T 
       (negamax-suc 
@@ -429,12 +531,12 @@
                    analised-nodes
                    cuts-number
                    )
-"NegamaxAuxiliar - Executa a funï¿½ï¿½o negamax para os sucessores de um nï¿½"
   (cond
-   ((= (length expanded-list) 1) 
-    (negamax (invert-node-sign (car expanded-list))
+   ((= (length expanded-list) 1)
+   (if (= 0 playing)
+   (negamax (invert-node-sign (car expanded-list))
              time-limit
-             (- playing)
+             1
              (1- max-depth)
              (- p-beta)
              (- p-alpha)
@@ -442,11 +544,25 @@
              (1+ analised-nodes)
              cuts-number
              )
+
+            (negamax (invert-node-sign (car expanded-list))
+             time-limit
+             0
+             (1- max-depth)
+             (- p-beta)
+             (- p-alpha)
+             start-time
+             (1+ analised-nodes)
+             cuts-number
+             )
+   ) 
+
     )
    (T
+    (if (= 0 playing)
     (let*  ((car-solution (negamax (invert-node-sign (car expanded-list))
                                    time-limit
-                                   (- playing)
+                                   1
                                    (1- max-depth)
                                    (- p-beta)
                                    (- p-alpha)
@@ -478,6 +594,43 @@
                      car-cuts
                      )
         )
+      )
+
+      (let*  ((car-solution (negamax (invert-node-sign (car expanded-list))
+                                   time-limit
+                                   0
+                                   (1- max-depth)
+                                   (- p-beta)
+                                   (- p-alpha)
+                                   start-time
+                                   (1+ analised-nodes)
+                                   cuts-number
+                                   ))
+            (car-node (car car-solution))
+            (best-value (max-node-f car-node parent-node))
+            (alpha (max p-alpha (get-node-f best-value)))
+            (car-analised-nodes (get-solution-analised-nodes (cadr car-solution)))       
+            (car-cuts (get-solution-cuts (cadr car-solution)))
+            )
+
+      (if (>= alpha p-beta)
+          ;;corte
+          (progn (create-solution-node parent-node car-analised-nodes (1+ car-cuts) start-time))
+
+        ;;nï¿½o corte
+        (negamax-suc parent-node
+                     (cdr expanded-list)
+                     time-limit
+                     playing
+                     max-depth
+                     alpha
+                     p-beta
+                     start-time
+                     car-analised-nodes
+                     car-cuts
+                     )
+        )
+      )
       )
     )
    )
@@ -523,6 +676,11 @@
 	(nth 2 node)
 )
 
+(defun get-solution-time-spent(solution-node)
+"Retorna o tempo de execu��o de um n�"
+  (nth 2 solution-node)
+)
+
 (defun get-solution-analised-nodes(solution-node)
 "Retorna a soluï¿½ï¿½o do nï¿½"
   (nth 0 solution-node)
@@ -565,17 +723,17 @@
 	(cadr node)
 )
 
-(defun create-solution-node(play-node analised-nodes cuts-number start-time)
+(defun create-solution-node (play-node analised-nodes cuts-number start-time)
 "Constrï¿½i o nï¿½ soluï¿½ï¿½o"
   (list play-node (list analised-nodes cuts-number (get-time-spent start-time)))
 )
 
-(defun get-time-spent(start-time)
+(defun get-time-spent (start-time)
 "Retorna a diferenï¿½a temporal"
   (- (get-universal-time) start-time)
 )
 
-(defun get-play(node)
+(defun get-play (node)
 "Retorna a jogada de um nï¿½"
   (let ((parent (get-node-parent node)))
     (cond
@@ -585,6 +743,54 @@
     )
 )
 
-(defun get-play-node(node)
+(defun get-play-node (node)
   (nth 5 node)
+)
+
+(defun write-start-log ()
+  (progn
+       (with-open-file (file (get-default-path 'log 'dat) :direction :output :if-exists :append :if-does-not-exist :create)
+          (format file "~%~C----------------- NOVO JOGO ----------------~%" #\tab))    
+       (format t "~%~C----------------- NOVO JOGO ----------------~%" #\tab))
+)
+
+(defun write-log (solution-node)
+ (let* ((current-node (car solution-node))
+         (play (get-play current-node))
+         (board (get-node-state current-node)))
+    (progn
+       (with-open-file (file (get-default-path 'log 'dat) :direction :output :if-exists :append :if-does-not-exist :create)
+          (write-data file solution-node board play 99))    
+       (write-data t solution-node board play 99))
+  )
+)
+
+(defun write-data (stream solution-node board player position)
+(progn 
+    (print-board board stream)
+    (format stream "~%~C Jogou na posicao: ~a" #\tab position)
+    (format stream "~%~C Nos analisados: ~a " #\tab (get-solution-analised-nodes (cadr solution-node)))
+    (format stream "~%~C Numero cortes: ~a " #\tab (get-solution-cuts (cadr solution-node)))
+    (format stream "~%~C Tempo gasto: ~a " #\tab (get-solution-time-spent (cadr solution-node)))
+  )   
+)
+
+(defun write-end-log (current-node)
+  (progn
+       (with-open-file (file (get-default-path 'log 'dat) :direction :output :if-exists :append :if-does-not-exist :create)
+            (end-game file current-node))
+       (end-game t current-node)
+  )
+) 
+
+(defun end-game (stream current-node)
+  (let ((machine-cap (get-node-captured current-node 0))
+        (human-cap (get-node-captured current-node 1)))
+    (cond 
+      ((> human-cap machine-cap) (format stream "~%~%~C Humano ganhou o jogo com ~S pecas capturadas contra ~S da maquina!~%" #\tab human-cap machine-cap))
+      ((> machine-cap human-cap) (format stream "~%~%~C Maquina ganhou o jogo com ~S pecas capturadas contra ~S do humano!~%" #\tab machine-cap human-cap))
+      (t (format stream "~%~%~C Houve um empate entre maquina e humano, ambos com ~S pecas capturadas!~%" #\tab human-cap))
+    )
+    (format stream "~%~%~C----------------- FIM JOGO -----------------~%" #\tab)
+  )
 )
