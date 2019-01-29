@@ -4,17 +4,13 @@
 
 (defpackage :p170221080-170221085)
 
-(defun data-directory ()
-  "C:/adjiboto/"
-)
-
-(compile-file (concatenate 'string (data-directory) "jogo.lisp"))
-(compile-file (concatenate 'string (data-directory) "algoritmo.lisp"))
-
 (defun get-default-path (file-name file-type)
 "Return the problems.dat path from the standard path 'C:/lisp/problems.dat'"
   (make-pathname :host "c" :directory '(:absolute "adjiboto") :name (string file-name) :type (string file-type))
 )
+
+(compile-file (get-default-path 'algoritmo 'lisp) :load t)
+(compile-file (get-default-path 'jogo 'lisp) :load t)
 
 (defun start ()
   (display-menu)
@@ -223,7 +219,7 @@
                             (new-machine1-board (first play))
                             (new-machine2-board (last play))
                             (new-board (construct-node play NIL new-machine2-board new-machine1-board 0 0 
-                              (+ machine1-cap (count-board-dif current-board play)) machine2-cap))
+                              machine1-cap (+ machine2-cap (count-board-dif current-board play))))
                             )
 
                             (progn
@@ -299,22 +295,21 @@
 
 (defun write-log (solution-node)
  (let* ((current-node (first solution-node))
-         (play (get-play current-node))
          (board (get-node-state current-node)))
     (progn
        (with-open-file (file (get-default-path 'log 'dat) :direction :output :if-exists :append :if-does-not-exist :create)
-          (write-data file solution-node board play 99))    
-       (write-data t solution-node board play 99))
+          (write-data file solution-node board 0))    
+       (write-data t solution-node board 0))
   )
 )
 
-(defun write-data (stream solution-node board player position)
+(defun write-data (stream solution-node board position)
 (progn 
     (print-board board stream)
     (format stream "~%~C Jogou na posicao: ~a" #\tab position)
     (format stream "~%~C Nos analisados: ~a " #\tab (get-solution-checked-nodes (second solution-node)))
     (format stream "~%~C Numero cortes: ~a " #\tab (get-solution-cuts (second solution-node)))
-    (format stream "~%~C Tempo gasto: ~a " #\tab (get-solution-time-spent (second solution-node)))
+    (format stream "~%~C Tempo gasto: ~a segundo(s) " #\tab (get-solution-time-spent (second solution-node)))
   )   
 )
 
