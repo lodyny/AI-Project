@@ -5,7 +5,7 @@
 (defpackage :p170221080-170221085)
 
 (defun get-default-path (file-name file-type)
-"Return the problems.dat path from the standard path 'C:/lisp/problems.dat'"
+"Return the default path to the adjiboto files"
   (make-pathname :host "c" :directory '(:absolute "adjiboto") :name (string file-name) :type (string file-type))
 )
 
